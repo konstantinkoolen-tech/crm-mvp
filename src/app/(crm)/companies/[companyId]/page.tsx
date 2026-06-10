@@ -116,10 +116,15 @@ export default async function CompanyDetailPage({
         </Card>
       </div>
 
-      <CompanyContacts companyId={company.id} contacts={contacts} />
+      <CompanyContacts
+        companyId={company.id}
+        contacts={contacts}
+        activities={activities}
+      />
       <CompanyDeals companyId={company.id} deals={deals} />
       <ActivityForm
         companyId={company.id}
+        contacts={contacts}
         returnTo={`/companies/${company.id}`}
         error={errorMessage(error)}
       />

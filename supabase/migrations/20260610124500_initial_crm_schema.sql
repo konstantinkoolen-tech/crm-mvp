@@ -35,6 +35,7 @@ create type public.deal_status as enum (
 
 create type public.activity_type as enum (
   'note',
+  'linkedin_message',
   'call',
   'email',
   'meeting',

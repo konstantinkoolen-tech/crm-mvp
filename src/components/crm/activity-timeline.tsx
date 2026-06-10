@@ -94,7 +94,7 @@ export function ActivityTimeline({
 }
 
 function ContextLinks({ activity }: { activity: ActivityWithContext }) {
-  if (!activity.company && !activity.deal) {
+  if (!activity.company && !activity.contact && !activity.deal) {
     return null;
   }
 
@@ -104,6 +104,11 @@ function ContextLinks({ activity }: { activity: ActivityWithContext }) {
         <Link href={`/companies/${activity.company.id}`} className="hover:underline">
           {activity.company.name}
         </Link>
+      ) : null}
+      {activity.contact ? (
+        <span>
+          {activity.contact.first_name} {activity.contact.last_name}
+        </span>
       ) : null}
       {activity.deal ? (
         <Link href={`/deals/${activity.deal.id}`} className="hover:underline">

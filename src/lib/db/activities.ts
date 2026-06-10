@@ -3,6 +3,7 @@ import type { ActivityStatus, ActivityType } from "@/types/database";
 
 export const activityTypeLabels: Record<ActivityType, string> = {
   note: "Notiz",
+  linkedin_message: "LinkedIn Message",
   call: "Call",
   email: "E-Mail",
   meeting: "Meeting",
@@ -29,6 +30,11 @@ export type ActivityWithContext = Activity & {
     id: string;
     name: string;
   } | null;
+  contact: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  } | null;
   deal: {
     id: string;
     title: string;
@@ -43,7 +49,9 @@ export async function listActivities() {
 
   const { data, error } = await supabase
     .from("activities")
-    .select(`${activitySelect}, company:companies(id, name), deal:deals(id, title)`)
+    .select(
+      `${activitySelect}, company:companies(id, name), contact:contacts(id, first_name, last_name), deal:deals(id, title)`,
+    )
     .order("occurred_at", { ascending: false });
 
   if (error) {
@@ -58,7 +66,9 @@ export async function listActivitiesForCompany(companyId: string) {
 
   const { data, error } = await supabase
     .from("activities")
-    .select(`${activitySelect}, deal:deals(id, title)`)
+    .select(
+      `${activitySelect}, contact:contacts(id, first_name, last_name), deal:deals(id, title)`,
+    )
     .eq("company_id", companyId)
     .order("occurred_at", { ascending: false });
 
@@ -74,7 +84,9 @@ export async function listActivitiesForDeal(dealId: string) {
 
   const { data, error } = await supabase
     .from("activities")
-    .select(`${activitySelect}, company:companies(id, name), deal:deals(id, title)`)
+    .select(
+      `${activitySelect}, company:companies(id, name), contact:contacts(id, first_name, last_name), deal:deals(id, title)`,
+    )
     .eq("deal_id", dealId)
     .order("occurred_at", { ascending: false });
 

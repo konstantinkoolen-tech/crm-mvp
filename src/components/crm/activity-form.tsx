@@ -11,20 +11,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { activityTypeLabels } from "@/lib/db/activities";
+import type { Contact } from "@/lib/db/contacts";
 import type { ActivityType } from "@/types/database";
 
 type ActivityFormProps = {
   companyId?: string;
   dealId?: string;
+  contacts?: Contact[];
   returnTo: string;
   error?: string;
 };
 
-const activityTypes: ActivityType[] = ["note", "call", "email", "meeting"];
+const activityTypes: ActivityType[] = [
+  "note",
+  "linkedin_message",
+  "call",
+  "email",
+  "meeting",
+];
 
 export function ActivityForm({
   companyId,
   dealId,
+  contacts = [],
   returnTo,
   error,
 }: ActivityFormProps) {
@@ -46,7 +55,7 @@ export function ActivityForm({
           {dealId ? <input type="hidden" name="deal_id" value={dealId} /> : null}
           <input type="hidden" name="return_to" value={returnTo} />
 
-          <div className="grid gap-4 md:grid-cols-[180px_1fr]">
+          <div className="grid gap-4 md:grid-cols-[180px_220px_1fr]">
             <div className="space-y-2">
               <Label htmlFor="type">Typ</Label>
               <select
@@ -58,6 +67,23 @@ export function ActivityForm({
                 {activityTypes.map((type) => (
                   <option key={type} value={type}>
                     {activityTypeLabels[type]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="contact_id">Kontakt</Label>
+              <select
+                id="contact_id"
+                name="contact_id"
+                defaultValue=""
+                className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
+              >
+                <option value="">Unternehmen</option>
+                {contacts.map((contact) => (
+                  <option key={contact.id} value={contact.id}>
+                    {contact.first_name} {contact.last_name}
                   </option>
                 ))}
               </select>

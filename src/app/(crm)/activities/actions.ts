@@ -5,7 +5,14 @@ import { redirect } from "next/navigation";
 import { getCompanyClient } from "@/lib/db/companies";
 import type { ActivityType } from "@/types/database";
 
-const activityTypes: ActivityType[] = ["note", "call", "email", "meeting", "task_update"];
+const activityTypes: ActivityType[] = [
+  "note",
+  "linkedin_message",
+  "call",
+  "email",
+  "meeting",
+  "task_update",
+];
 
 function nullableText(value: FormDataEntryValue | null) {
   const text = String(value ?? "").trim();
@@ -23,11 +30,12 @@ function typeFromForm(value: FormDataEntryValue | null): ActivityType {
 
 export async function createActivity(formData: FormData) {
   const companyId = nullableText(formData.get("company_id"));
+  const contactId = nullableText(formData.get("contact_id"));
   const dealId = nullableText(formData.get("deal_id"));
   const returnTo = requiredText(formData.get("return_to")) || "/activities";
   const title = requiredText(formData.get("title"));
 
-  if (!companyId && !dealId) {
+  if (!companyId && !contactId && !dealId) {
     redirect(`${returnTo}?error=missing_context`);
   }
 
@@ -39,6 +47,7 @@ export async function createActivity(formData: FormData) {
   const { error } = await supabase.from("activities").insert({
     owner_id: user.id,
     company_id: companyId,
+    contact_id: contactId,
     deal_id: dealId,
     type: typeFromForm(formData.get("type")),
     status: "completed",
