@@ -57,7 +57,7 @@ export async function listContacts() {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as ContactWithCompany[];
+  return (data ?? []) as unknown as ContactWithCompany[];
 }
 
 export async function getContact(contactId: string) {
@@ -77,5 +77,5 @@ export async function getContact(contactId: string) {
     notFound();
   }
 
-  return data as ContactWithCompany;
+  return data as unknown as ContactWithCompany;
 }

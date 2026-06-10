@@ -60,7 +60,7 @@ export async function listDeals() {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as DealWithCompany[];
+  return (data ?? []) as unknown as DealWithCompany[];
 }
 
 export async function listDealsForCompany(companyId: string) {
@@ -96,5 +96,5 @@ export async function getDeal(dealId: string) {
     notFound();
   }
 
-  return data as DealWithCompany;
+  return data as unknown as DealWithCompany;
 }

@@ -50,7 +50,7 @@ export async function listActivities() {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as ActivityWithContext[];
+  return (data ?? []) as unknown as ActivityWithContext[];
 }
 
 export async function listActivitiesForCompany(companyId: string) {
@@ -66,7 +66,7 @@ export async function listActivitiesForCompany(companyId: string) {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as ActivityWithContext[];
+  return (data ?? []) as unknown as ActivityWithContext[];
 }
 
 export async function listActivitiesForDeal(dealId: string) {
@@ -82,5 +82,5 @@ export async function listActivitiesForDeal(dealId: string) {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as ActivityWithContext[];
+  return (data ?? []) as unknown as ActivityWithContext[];
 }

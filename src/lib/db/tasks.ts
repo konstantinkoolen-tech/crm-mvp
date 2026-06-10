@@ -82,7 +82,7 @@ export async function listTasks() {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as TaskWithContext[];
+  return (data ?? []) as unknown as TaskWithContext[];
 }
 
 export async function listOpenTasks() {
@@ -99,7 +99,7 @@ export async function listOpenTasks() {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as TaskWithContext[];
+  return (data ?? []) as unknown as TaskWithContext[];
 }
 
 export async function listOverdueTasks() {
@@ -124,5 +124,5 @@ export async function getTask(taskId: string) {
     notFound();
   }
 
-  return data as TaskWithContext;
+  return data as unknown as TaskWithContext;
 }
