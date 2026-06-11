@@ -28,6 +28,13 @@ function typeFromForm(value: FormDataEntryValue | null): ActivityType {
   return activityTypes.includes(type as ActivityType) ? (type as ActivityType) : "note";
 }
 
+function occurredAtFromForm(value: FormDataEntryValue | null) {
+  const text = String(value ?? "").trim();
+  const date = text ? new Date(text) : new Date();
+
+  return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+}
+
 export async function createActivity(formData: FormData) {
   const companyId = nullableText(formData.get("company_id"));
   const contactId = nullableText(formData.get("contact_id"));
@@ -53,7 +60,7 @@ export async function createActivity(formData: FormData) {
     status: "completed",
     title,
     body: nullableText(formData.get("body")),
-    occurred_at: new Date().toISOString(),
+    occurred_at: occurredAtFromForm(formData.get("occurred_at")),
   });
 
   if (error) {

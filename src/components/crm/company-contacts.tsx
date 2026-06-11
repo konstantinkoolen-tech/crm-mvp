@@ -1,5 +1,4 @@
 import {
-  CalendarDays,
   ChevronDown,
   Mail,
   MessageSquare,
@@ -7,10 +6,9 @@ import {
   Plus,
 } from "lucide-react";
 import Link from "next/link";
-import { createActivity } from "@/app/(crm)/activities/actions";
+import { ContactQuickActions } from "@/components/crm/contact-quick-actions";
 import { ContactDeleteForm } from "@/components/crm/contact-delete-form";
 import { ContactStatusBadge } from "@/components/crm/contact-status-badge";
-import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -21,7 +19,6 @@ import {
 } from "@/components/ui/card";
 import { activityTypeLabels, type ActivityWithContext } from "@/lib/db/activities";
 import type { Contact } from "@/lib/db/contacts";
-import type { ActivityType } from "@/types/database";
 
 type CompanyContactsProps = {
   companyId: string;
@@ -82,7 +79,7 @@ export function CompanyContacts({
           </div>
         ) : (
           <div className="space-y-3 overflow-x-auto">
-            <div className="grid min-w-[920px] grid-cols-[minmax(180px,1.2fr)_minmax(120px,0.8fr)_minmax(220px,1.2fr)_132px_220px] gap-4 px-4 text-xs font-medium text-neutral-500 max-lg:hidden">
+            <div className="grid min-w-[940px] grid-cols-[minmax(180px,1.2fr)_minmax(120px,0.8fr)_minmax(220px,1.2fr)_152px_220px] gap-4 px-4 text-xs font-medium text-neutral-500 max-lg:hidden">
               <span>Name</span>
               <span>Position</span>
               <span>Kontakt</span>
@@ -117,7 +114,7 @@ function ContactRow({
 
   return (
     <details className="group rounded-md border border-neutral-200 bg-white">
-      <summary className="grid cursor-pointer list-none gap-4 p-4 transition hover:bg-neutral-50 lg:min-w-[920px] lg:grid-cols-[minmax(180px,1.2fr)_minmax(120px,0.8fr)_minmax(220px,1.2fr)_132px_220px] lg:items-center [&::-webkit-details-marker]:hidden">
+      <summary className="grid cursor-pointer list-none gap-4 p-4 transition hover:bg-neutral-50 lg:min-w-[940px] lg:grid-cols-[minmax(180px,1.2fr)_minmax(120px,0.8fr)_minmax(220px,1.2fr)_152px_220px] lg:items-center [&::-webkit-details-marker]:hidden">
         <div className="min-w-0">
           <div className="flex items-start gap-2">
             <ChevronDown
@@ -148,7 +145,7 @@ function ContactRow({
 
         <ContactLinks contact={contact} />
 
-        <QuickActions
+        <ContactQuickActions
           contact={contact}
           companyId={companyId}
           contactName={contactName}
@@ -175,7 +172,7 @@ function ContactRow({
               {activities.length} Eintraege
             </p>
           </div>
-          <QuickActions
+          <ContactQuickActions
             contact={contact}
             companyId={companyId}
             contactName={contactName}
@@ -238,107 +235,6 @@ function ContactLinks({ contact }: { contact: Contact }) {
       {!contact.email && !contact.phone ? "-" : null}
     </div>
   );
-}
-
-function QuickActions({
-  contact,
-  companyId,
-  contactName,
-  expanded = false,
-}: {
-  contact: Contact;
-  companyId: string;
-  contactName: string;
-  expanded?: boolean;
-}) {
-  const actions: Array<{
-    type: ActivityType;
-    title: string;
-    label: string;
-    icon: "linkedin" | "phone" | "mail" | "meeting";
-  }> = [
-    {
-      type: "linkedin_message",
-      title: `LinkedIn Message mit ${contactName}`,
-      label: "LinkedIn",
-      icon: "linkedin",
-    },
-    {
-      type: "call",
-      title: `Telefonat mit ${contactName}`,
-      label: "Telefonat",
-      icon: "phone",
-    },
-    {
-      type: "email",
-      title: `E-Mail an ${contactName}`,
-      label: "E-Mail",
-      icon: "mail",
-    },
-    {
-      type: "meeting",
-      title: `Meeting mit ${contactName}`,
-      label: "Meeting",
-      icon: "meeting",
-    },
-  ];
-
-  return (
-    <div
-      className={
-        expanded ? "flex flex-wrap gap-2" : "flex flex-wrap gap-1"
-      }
-    >
-      {actions.map((action) => (
-        <form
-          key={action.type}
-          action={createActivity}
-          className={expanded ? undefined : "shrink-0"}
-        >
-          <input type="hidden" name="company_id" value={companyId} />
-          <input type="hidden" name="contact_id" value={contact.id} />
-          <input type="hidden" name="type" value={action.type} />
-          <input type="hidden" name="title" value={action.title} />
-          <input type="hidden" name="return_to" value={`/companies/${companyId}`} />
-          <Button
-            type="submit"
-            variant="outline"
-            size="sm"
-            className={
-              expanded
-                ? "h-8 px-2 text-xs"
-                : "size-8 rounded-md p-0 text-neutral-600 hover:text-neutral-950"
-            }
-            title={`${action.label} hinzufuegen`}
-            aria-label={`${action.label} hinzufuegen`}
-          >
-            <ActionIcon icon={action.icon} />
-            <span className={expanded ? "inline" : "sr-only"}>{action.label}</span>
-          </Button>
-        </form>
-      ))}
-    </div>
-  );
-}
-
-function ActionIcon({
-  icon,
-}: {
-  icon: "linkedin" | "phone" | "mail" | "meeting";
-}) {
-  if (icon === "linkedin") {
-    return <MessageSquare aria-hidden="true" />;
-  }
-
-  if (icon === "phone") {
-    return <Phone aria-hidden="true" />;
-  }
-
-  if (icon === "mail") {
-    return <Mail aria-hidden="true" />;
-  }
-
-  return <CalendarDays aria-hidden="true" />;
 }
 
 function formatDateTime(value: string) {
