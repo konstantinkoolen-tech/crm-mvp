@@ -6,6 +6,8 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { getCompanyClient } from "@/lib/db/companies";
 import { requireAdminProfile } from "@/lib/db/value-props";
 
+const VALUE_PROPS_PATH = "/value-props";
+
 function requiredText(value: FormDataEntryValue | null) {
   return String(value ?? "").trim();
 }
@@ -21,11 +23,11 @@ function intFromForm(value: FormDataEntryValue | null) {
 }
 
 function settingsRedirect(message: string): never {
-  redirect(`/settings?message=${encodeURIComponent(message)}`);
+  redirect(`${VALUE_PROPS_PATH}?message=${encodeURIComponent(message)}`);
 }
 
 function settingsError(message: string): never {
-  redirect(`/settings?error=${encodeURIComponent(message)}`);
+  redirect(`${VALUE_PROPS_PATH}?error=${encodeURIComponent(message)}`);
 }
 
 async function ensureAdminOrRedirect() {
@@ -63,7 +65,7 @@ export async function createValueProp(formData: FormData) {
     settingsError(error.message);
   }
 
-  revalidatePath("/settings");
+  revalidateValueProps();
   settingsRedirect("Value Prop wurde hinzugefuegt.");
 }
 
@@ -93,8 +95,83 @@ export async function updateValueProp(formData: FormData) {
     settingsError(error.message);
   }
 
-  revalidatePath("/settings");
+  revalidateValueProps();
   settingsRedirect("Value Prop wurde aktualisiert.");
+}
+
+export async function updateValuePropStatus(formData: FormData) {
+  await ensureAdminOrRedirect();
+  const { supabase } = await getCompanyClient();
+  const valuePropId = requiredText(formData.get("value_prop_id"));
+  const status = requiredText(formData.get("status")) === "archived" ? "archived" : "active";
+
+  if (!valuePropId) {
+    settingsError("Value Prop fehlt.");
+  }
+
+  const { error } = await supabase
+    .from("value_props")
+    .update({ status })
+    .eq("id", valuePropId);
+
+  if (error) {
+    settingsError(error.message);
+  }
+
+  revalidateValueProps();
+  redirect(VALUE_PROPS_PATH);
+}
+
+export async function moveValueProp(formData: FormData) {
+  await ensureAdminOrRedirect();
+  const { supabase, user } = await getCompanyClient();
+  const valuePropId = requiredText(formData.get("value_prop_id"));
+  const direction = requiredText(formData.get("direction"));
+
+  if (!valuePropId || (direction !== "up" && direction !== "down")) {
+    settingsError("Reihenfolge konnte nicht geaendert werden.");
+  }
+
+  const { data, error } = await supabase
+    .from("value_props")
+    .select("id, sort_order")
+    .eq("owner_id", user.id)
+    .order("sort_order", { ascending: true })
+    .order("code", { ascending: true });
+
+  if (error) {
+    settingsError(error.message);
+  }
+
+  const currentIndex = (data ?? []).findIndex((valueProp) => valueProp.id === valuePropId);
+  const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+  const current = data?.[currentIndex];
+  const target = data?.[targetIndex];
+
+  if (!current || !target) {
+    redirect(VALUE_PROPS_PATH);
+  }
+
+  const { error: currentError } = await supabase
+    .from("value_props")
+    .update({ sort_order: target.sort_order })
+    .eq("id", current.id);
+
+  if (currentError) {
+    settingsError(currentError.message);
+  }
+
+  const { error: targetError } = await supabase
+    .from("value_props")
+    .update({ sort_order: current.sort_order })
+    .eq("id", target.id);
+
+  if (targetError) {
+    settingsError(targetError.message);
+  }
+
+  revalidateValueProps();
+  redirect(VALUE_PROPS_PATH);
 }
 
 export async function deleteValueProp(formData: FormData) {
@@ -115,7 +192,7 @@ export async function deleteValueProp(formData: FormData) {
     settingsError(error.message);
   }
 
-  revalidatePath("/settings");
+  revalidateValueProps();
   settingsRedirect("Value Prop wurde geloescht.");
 }
 
@@ -181,4 +258,10 @@ function getAdminClient() {
       persistSession: false,
     },
   });
+}
+
+function revalidateValueProps() {
+  revalidatePath("/settings");
+  revalidatePath(VALUE_PROPS_PATH);
+  revalidatePath("/companies/[companyId]", "page");
 }

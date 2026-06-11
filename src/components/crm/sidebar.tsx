@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   NotebookText,
   Settings,
+  Tags,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -41,6 +42,11 @@ const navigation = [
     href: "/tasks",
     label: "Tasks",
     icon: ClipboardList,
+  },
+  {
+    href: "/value-props",
+    label: "Value Props",
+    icon: Tags,
   },
 ];
 
