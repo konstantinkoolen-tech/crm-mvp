@@ -4,6 +4,7 @@ import {
   Handshake,
   LayoutDashboard,
   NotebookText,
+  Settings,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -49,14 +50,11 @@ type SidebarProps = {
 
 export function Sidebar({ userEmail }: SidebarProps) {
   return (
-    <aside className="hidden min-h-dvh w-64 shrink-0 border-r border-neutral-200 bg-white lg:flex lg:flex-col">
+    <aside className="hidden h-dvh w-64 shrink-0 border-r border-neutral-200 bg-white lg:flex lg:flex-col">
       <div className="border-b border-neutral-200 px-5 py-4">
         <Link href="/dashboard" className="block">
           <span className="text-sm font-semibold tracking-normal text-neutral-950">
             tagtig CRM
-          </span>
-          <span className="mt-1 block truncate text-xs text-neutral-500">
-            {userEmail ?? "Internes CRM"}
           </span>
         </Link>
       </div>
@@ -82,6 +80,16 @@ export function Sidebar({ userEmail }: SidebarProps) {
       </nav>
 
       <div className="border-t border-neutral-200 p-3">
+        <div className="mb-2 truncate px-3 text-xs font-medium text-neutral-500">
+          {userEmail ?? "Angemeldet"}
+        </div>
+        <button
+          type="button"
+          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-950"
+        >
+          <Settings className="size-4" aria-hidden="true" />
+          Einstellungen
+        </button>
         <LogoutButton />
       </div>
     </aside>

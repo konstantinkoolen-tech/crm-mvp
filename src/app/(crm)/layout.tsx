@@ -21,12 +21,14 @@ export default async function CrmLayout({
   await ensureProfile(supabase, user);
 
   return (
-    <div className="min-h-dvh bg-neutral-50 text-neutral-950">
-      <div className="flex min-h-dvh">
+    <div className="h-dvh overflow-hidden bg-neutral-50 text-neutral-950">
+      <div className="flex h-full min-h-0">
         <Sidebar userEmail={user.email} />
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <MobileHeader userEmail={user.email} />
-          <main className="flex-1 px-4 py-5 sm:px-6 lg:px-8">{children}</main>
+          <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
+            {children}
+          </main>
         </div>
       </div>
     </div>
