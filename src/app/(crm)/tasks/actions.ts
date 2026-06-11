@@ -43,21 +43,24 @@ function taskPayload(formData: FormData, ownerId: string) {
 }
 
 export async function createTask(formData: FormData) {
+  const returnTo = requiredText(formData.get("return_to"));
+  const errorTo = returnTo || "/tasks/new";
+  const successTo = returnTo || "/tasks";
   const { supabase, user } = await getCompanyClient();
   const payload = taskPayload(formData, user.id);
 
   if (!payload.title) {
-    redirect("/tasks/new?error=missing_title");
+    redirect(`${errorTo}?error=missing_title`);
   }
 
   if (!payload.due_date) {
-    redirect("/tasks/new?error=missing_due_date");
+    redirect(`${errorTo}?error=missing_due_date`);
   }
 
   const { error } = await supabase.from("tasks").insert(payload);
 
   if (error) {
-    redirect(`/tasks/new?error=${encodeURIComponent(error.message)}`);
+    redirect(`${errorTo}?error=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath("/tasks");
@@ -69,7 +72,7 @@ export async function createTask(formData: FormData) {
     revalidatePath(`/deals/${payload.deal_id}`);
   }
 
-  redirect("/tasks");
+  redirect(successTo);
 }
 
 export async function updateTask(formData: FormData) {

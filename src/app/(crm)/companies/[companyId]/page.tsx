@@ -1,7 +1,7 @@
 import { ArrowLeft, Pencil } from "lucide-react";
 import Link from "next/link";
-import { ActivityForm } from "@/components/crm/activity-form";
 import { ActivityTimeline } from "@/components/crm/activity-timeline";
+import { CompanyActionForms } from "@/components/crm/company-action-forms";
 import { CompanyContacts } from "@/components/crm/company-contacts";
 import { CompanyDeals } from "@/components/crm/company-deals";
 import { CompanyDeleteForm } from "@/components/crm/company-delete-form";
@@ -122,10 +122,9 @@ export default async function CompanyDetailPage({
         activities={activities}
       />
       <CompanyDeals companyId={company.id} deals={deals} />
-      <ActivityForm
+      <CompanyActionForms
         companyId={company.id}
         contacts={contacts}
-        returnTo={`/companies/${company.id}`}
         error={errorMessage(error)}
       />
       <ActivityTimeline
@@ -153,7 +152,7 @@ function errorMessage(error?: string) {
   }
 
   if (error === "missing_title") {
-    return "Bitte gib einen Titel fuer die Aktivitaet ein.";
+    return "Bitte gib einen Titel ein.";
   }
 
   if (error === "missing_context") {
@@ -166,6 +165,10 @@ function errorMessage(error?: string) {
 
   if (error === "missing_task_due_date") {
     return "Bitte gib ein Faelligkeitsdatum fuer die Follow-up Task ein.";
+  }
+
+  if (error === "missing_due_date") {
+    return "Bitte gib ein Faelligkeitsdatum fuer die Task ein.";
   }
 
   return decodeURIComponent(error);
