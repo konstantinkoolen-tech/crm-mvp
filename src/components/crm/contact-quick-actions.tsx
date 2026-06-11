@@ -132,14 +132,14 @@ export function ContactQuickActions({
 
       {selectedAction ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/35 px-4"
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-950/35 px-4 py-6 sm:py-10"
           role="dialog"
           aria-modal="true"
           aria-labelledby="activity-dialog-title"
           onClick={() => setSelectedAction(null)}
         >
           <div
-            className="w-full max-w-md rounded-lg border border-neutral-200 bg-white p-5 shadow-xl"
+            className="mx-auto w-full max-w-md rounded-lg border border-neutral-200 bg-white p-5 shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
