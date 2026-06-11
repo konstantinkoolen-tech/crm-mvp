@@ -40,6 +40,9 @@ export function MobileHeader({ userEmail }: MobileHeaderProps) {
         <Link className="rounded-md px-3 py-2 text-neutral-700" href="/tasks">
           Tasks
         </Link>
+        <Link className="rounded-md px-3 py-2 text-neutral-700" href="/settings">
+          Einstellungen
+        </Link>
       </nav>
     </header>
   );

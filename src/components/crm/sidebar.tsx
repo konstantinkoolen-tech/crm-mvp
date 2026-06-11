@@ -83,13 +83,13 @@ export function Sidebar({ userEmail }: SidebarProps) {
         <div className="mb-2 truncate px-3 text-xs font-medium text-neutral-500">
           {userEmail ?? "Angemeldet"}
         </div>
-        <button
-          type="button"
+        <Link
+          href="/settings"
           className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-950"
         >
           <Settings className="size-4" aria-hidden="true" />
           Einstellungen
-        </button>
+        </Link>
         <LogoutButton />
       </div>
     </aside>

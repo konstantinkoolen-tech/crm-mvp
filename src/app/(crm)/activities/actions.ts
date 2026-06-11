@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCompanyClient } from "@/lib/db/companies";
-import type { ActivityType } from "@/types/database";
+import type {
+  ActivityType,
+  OutreachKind,
+  OutreachOutcome,
+  PainStatement,
+} from "@/types/database";
 
 const activityTypes: ActivityType[] = [
   "note",
@@ -12,6 +17,32 @@ const activityTypes: ActivityType[] = [
   "email",
   "meeting",
   "task_update",
+];
+
+const outreachKinds: OutreachKind[] = ["snowflake", "fire", "fire_plus"];
+
+const snowflakeOutcomes: OutreachOutcome[] = [
+  "no_response",
+  "wrong_number",
+  "gatekeeper",
+  "no_time",
+  "not_interested",
+  "interested",
+  "follow_up_booked",
+];
+
+const warmOutcomes: OutreachOutcome[] = [
+  "no_response",
+  "no_time",
+  "not_interested",
+  "interested",
+  "follow_up_booked",
+];
+
+const painStatements: PainStatement[] = [
+  "no_statement",
+  "pain_not_identified",
+  "pain_identified",
 ];
 
 function nullableText(value: FormDataEntryValue | null) {
@@ -35,6 +66,36 @@ function occurredAtFromForm(value: FormDataEntryValue | null) {
   return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
 }
 
+function outreachKindFromForm(value: FormDataEntryValue | null) {
+  const kind = String(value ?? "").trim();
+  return outreachKinds.includes(kind as OutreachKind) ? (kind as OutreachKind) : null;
+}
+
+function painStatementFromForm(value: FormDataEntryValue | null): PainStatement {
+  const statement = String(value ?? "no_statement").trim();
+  return painStatements.includes(statement as PainStatement)
+    ? (statement as PainStatement)
+    : "no_statement";
+}
+
+function outcomeFromForm(
+  value: FormDataEntryValue | null,
+  outreachKind: OutreachKind | null,
+) {
+  const outcome = String(value ?? "").trim();
+
+  if (!outreachKind) {
+    return null;
+  }
+
+  const allowedOutcomes =
+    outreachKind === "snowflake" ? snowflakeOutcomes : warmOutcomes;
+
+  return allowedOutcomes.includes(outcome as OutreachOutcome)
+    ? (outcome as OutreachOutcome)
+    : null;
+}
+
 export async function createActivity(formData: FormData) {
   const companyId = nullableText(formData.get("company_id"));
   const contactId = nullableText(formData.get("contact_id"));
@@ -44,6 +105,9 @@ export async function createActivity(formData: FormData) {
   const shouldCreateTask = formData.get("create_task") === "true";
   const taskTitle = requiredText(formData.get("task_title"));
   const taskDueDate = nullableText(formData.get("task_due_date"));
+  const outreachKind = outreachKindFromForm(formData.get("outreach_kind"));
+  const outreachOutcome = outcomeFromForm(formData.get("outreach_outcome"), outreachKind);
+  const valuePropId = outreachKind ? nullableText(formData.get("value_prop_id")) : null;
 
   if (!companyId && !contactId && !dealId) {
     redirect(`${returnTo}?error=missing_context`);
@@ -61,6 +125,10 @@ export async function createActivity(formData: FormData) {
     redirect(`${returnTo}?error=missing_task_due_date`);
   }
 
+  if (outreachKind && (!outreachOutcome || !valuePropId)) {
+    redirect(`${returnTo}?error=missing_outreach_fields`);
+  }
+
   const { supabase, user } = await getCompanyClient();
   const { error } = await supabase.from("activities").insert({
     owner_id: user.id,
@@ -71,6 +139,10 @@ export async function createActivity(formData: FormData) {
     status: "completed",
     title,
     body: nullableText(formData.get("body")),
+    outreach_kind: outreachKind,
+    outreach_outcome: outreachOutcome,
+    pain_statement: painStatementFromForm(formData.get("pain_statement")),
+    value_prop_id: valuePropId,
     occurred_at: occurredAtFromForm(formData.get("occurred_at")),
   });
 

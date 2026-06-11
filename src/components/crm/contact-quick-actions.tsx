@@ -1,16 +1,28 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarDays, Mail, MessageSquare, Phone, Plus, X } from "lucide-react";
+import {
+  CalendarDays,
+  Flame,
+  FlameKindling,
+  Mail,
+  MessageSquare,
+  Phone,
+  Plus,
+  Snowflake,
+  X,
+} from "lucide-react";
 import { createActivity } from "@/app/(crm)/activities/actions";
 import { Button } from "@/components/ui/button";
 import type { Contact } from "@/lib/db/contacts";
-import type { ActivityType } from "@/types/database";
+import type { ValueProp } from "@/lib/db/value-props";
+import type { ActivityType, OutreachKind, OutreachOutcome } from "@/types/database";
 
 type ContactQuickActionsProps = {
   contact: Contact;
   companyId: string;
   contactName: string;
+  valueProps: ValueProp[];
   expanded?: boolean;
 };
 
@@ -27,15 +39,61 @@ const actions: QuickAction[] = [
   { type: "meeting", label: "Meeting", icon: "meeting" },
 ];
 
+const outreachOptions: {
+  kind: OutreachKind;
+  label: string;
+  icon: typeof Snowflake;
+  className: string;
+}[] = [
+  {
+    kind: "snowflake",
+    label: "Snowflake",
+    icon: Snowflake,
+    className: "data-[selected=true]:border-sky-300 data-[selected=true]:bg-sky-50 data-[selected=true]:text-sky-700",
+  },
+  {
+    kind: "fire",
+    label: "Fire",
+    icon: Flame,
+    className: "data-[selected=true]:border-orange-300 data-[selected=true]:bg-orange-50 data-[selected=true]:text-orange-700",
+  },
+  {
+    kind: "fire_plus",
+    label: "Fire+",
+    icon: FlameKindling,
+    className: "data-[selected=true]:border-red-300 data-[selected=true]:bg-red-50 data-[selected=true]:text-red-700",
+  },
+];
+
+const snowflakeOutcomes: { value: OutreachOutcome; label: string }[] = [
+  { value: "no_response", label: "No response" },
+  { value: "wrong_number", label: "Falsche Nummer" },
+  { value: "gatekeeper", label: "Gatekeeper" },
+  { value: "no_time", label: "Keine Zeit" },
+  { value: "not_interested", label: "Kein Interesse" },
+  { value: "interested", label: "Interesse" },
+  { value: "follow_up_booked", label: "Follow-up gebucht" },
+];
+
+const warmOutcomes: { value: OutreachOutcome; label: string }[] = [
+  { value: "no_response", label: "No response" },
+  { value: "no_time", label: "Keine Zeit" },
+  { value: "not_interested", label: "Kein Interesse" },
+  { value: "interested", label: "Interesse" },
+  { value: "follow_up_booked", label: "Follow-up gebucht" },
+];
+
 export function ContactQuickActions({
   contact,
   companyId,
   contactName,
+  valueProps,
   expanded = false,
 }: ContactQuickActionsProps) {
   const [selectedAction, setSelectedAction] = useState<QuickAction | null>(null);
   const [dateTime, setDateTime] = useState(() => defaultDateTimeValue());
   const [includeTask, setIncludeTask] = useState(false);
+  const [outreachKind, setOutreachKind] = useState<OutreachKind | null>(null);
 
   const occurredAt = useMemo(() => {
     const parsed = new Date(dateTime);
@@ -63,6 +121,7 @@ export function ContactQuickActions({
               event.stopPropagation();
               setSelectedAction(action);
               setIncludeTask(false);
+              setOutreachKind(null);
             }}
           >
             <ActionIcon icon={action.icon} />
@@ -120,6 +179,9 @@ export function ContactQuickActions({
               {includeTask ? (
                 <input type="hidden" name="create_task" value="true" />
               ) : null}
+              {outreachKind ? (
+                <input type="hidden" name="outreach_kind" value={outreachKind} />
+              ) : null}
               <input type="hidden" name="return_to" value={`/companies/${companyId}`} />
 
               <label className="block">
@@ -146,6 +208,110 @@ export function ContactQuickActions({
                   className="mt-1 w-full resize-none rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
                 />
               </label>
+
+              <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-neutral-800">
+                      Art der Aktivitaet
+                    </p>
+                    <p className="mt-0.5 text-xs text-neutral-500">
+                      Outreach nur markieren, wenn ein Symbol zutrifft.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    {outreachOptions.map((option) => {
+                      const Icon = option.icon;
+                      const selected = outreachKind === option.kind;
+
+                      return (
+                        <Button
+                          key={option.kind}
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          data-selected={selected}
+                          className={option.className}
+                          title={option.label}
+                          aria-label={`${option.label} Outreach markieren`}
+                          onClick={() =>
+                            setOutreachKind((current) =>
+                              current === option.kind ? null : option.kind,
+                            )
+                          }
+                        >
+                          <Icon aria-hidden="true" />
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {outreachKind ? (
+                  <div className="mt-4 grid gap-3">
+                    <label className="block">
+                      <span className="text-sm font-medium text-neutral-700">
+                        Outcome
+                      </span>
+                      <select
+                        name="outreach_outcome"
+                        required
+                        defaultValue=""
+                        className="mt-1 flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
+                      >
+                        <option value="" disabled>
+                          Outcome auswaehlen
+                        </option>
+                        {(outreachKind === "snowflake"
+                          ? snowflakeOutcomes
+                          : warmOutcomes
+                        ).map((outcome) => (
+                          <option key={outcome.value} value={outcome.value}>
+                            {outcome.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="block">
+                      <span className="text-sm font-medium text-neutral-700">
+                        Pain Aussage
+                      </span>
+                      <select
+                        name="pain_statement"
+                        defaultValue="no_statement"
+                        required
+                        className="mt-1 flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
+                      >
+                        <option value="no_statement">Keine Aussage</option>
+                        <option value="pain_not_identified">Pain nicht erkannt</option>
+                        <option value="pain_identified">Pain erkannt</option>
+                      </select>
+                    </label>
+
+                    <label className="block">
+                      <span className="text-sm font-medium text-neutral-700">
+                        Value Prop
+                      </span>
+                      <select
+                        name="value_prop_id"
+                        defaultValue=""
+                        required
+                        className="mt-1 flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
+                      >
+                        <option value="" disabled>
+                          Value Prop auswaehlen
+                        </option>
+                        {valueProps.map((valueProp) => (
+                          <option key={valueProp.id} value={valueProp.id}>
+                            {valueProp.code}: {valueProp.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                ) : null}
+              </div>
 
               <div className="flex justify-center">
                 <Button

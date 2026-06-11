@@ -17,19 +17,28 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { activityTypeLabels, type ActivityWithContext } from "@/lib/db/activities";
+import {
+  activityTypeLabels,
+  outreachKindLabels,
+  outreachOutcomeLabels,
+  painStatementLabels,
+  type ActivityWithContext,
+} from "@/lib/db/activities";
 import type { Contact } from "@/lib/db/contacts";
+import type { ValueProp } from "@/lib/db/value-props";
 
 type CompanyContactsProps = {
   companyId: string;
   contacts: Contact[];
   activities: ActivityWithContext[];
+  valueProps: ValueProp[];
 };
 
 export function CompanyContacts({
   companyId,
   contacts,
   activities,
+  valueProps,
 }: CompanyContactsProps) {
   const activitiesByContact = new Map<string, ActivityWithContext[]>();
 
@@ -92,6 +101,7 @@ export function CompanyContacts({
                 contact={contact}
                 companyId={companyId}
                 activities={activitiesByContact.get(contact.id) ?? []}
+                valueProps={valueProps}
               />
             ))}
           </div>
@@ -105,10 +115,12 @@ function ContactRow({
   contact,
   companyId,
   activities,
+  valueProps,
 }: {
   contact: Contact;
   companyId: string;
   activities: ActivityWithContext[];
+  valueProps: ValueProp[];
 }) {
   const contactName = `${contact.first_name} ${contact.last_name}`;
 
@@ -149,6 +161,7 @@ function ContactRow({
           contact={contact}
           companyId={companyId}
           contactName={contactName}
+          valueProps={valueProps}
         />
 
         <div className="flex justify-end gap-2">
@@ -176,6 +189,7 @@ function ContactRow({
             contact={contact}
             companyId={companyId}
             contactName={contactName}
+            valueProps={valueProps}
             expanded
           />
         </div>
@@ -204,12 +218,44 @@ function ContactRow({
                     {activity.body}
                   </p>
                 ) : null}
+                <ContactActivityOutreachDetails activity={activity} />
               </li>
             ))}
           </ol>
         )}
       </div>
     </details>
+  );
+}
+
+function ContactActivityOutreachDetails({
+  activity,
+}: {
+  activity: ActivityWithContext;
+}) {
+  if (!activity.outreach_kind) {
+    return null;
+  }
+
+  return (
+    <div className="mt-3 flex flex-wrap gap-2 text-xs text-neutral-600">
+      <span className="rounded bg-white px-2 py-1 font-medium text-neutral-800 ring-1 ring-neutral-200">
+        Outreach: {outreachKindLabels[activity.outreach_kind]}
+      </span>
+      {activity.outreach_outcome ? (
+        <span className="rounded bg-white px-2 py-1 ring-1 ring-neutral-200">
+          Outcome: {outreachOutcomeLabels[activity.outreach_outcome]}
+        </span>
+      ) : null}
+      <span className="rounded bg-white px-2 py-1 ring-1 ring-neutral-200">
+        Pain: {painStatementLabels[activity.pain_statement]}
+      </span>
+      {activity.value_prop ? (
+        <span className="rounded bg-white px-2 py-1 ring-1 ring-neutral-200">
+          Value Prop: {activity.value_prop.code}: {activity.value_prop.label}
+        </span>
+      ) : null}
+    </div>
   );
 }
 

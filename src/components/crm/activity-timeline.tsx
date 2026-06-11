@@ -9,7 +9,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { activityTypeLabels, type ActivityWithContext } from "@/lib/db/activities";
+import {
+  activityTypeLabels,
+  outreachKindLabels,
+  outreachOutcomeLabels,
+  painStatementLabels,
+  type ActivityWithContext,
+} from "@/lib/db/activities";
 
 type ActivityTimelineProps = {
   activities: ActivityWithContext[];
@@ -65,6 +71,7 @@ export function ActivityTimeline({
                           {activity.body}
                         </p>
                       ) : null}
+                      <OutreachDetails activity={activity} />
                       <ContextLinks activity={activity} />
                     </div>
 
@@ -90,6 +97,33 @@ export function ActivityTimeline({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function OutreachDetails({ activity }: { activity: ActivityWithContext }) {
+  if (!activity.outreach_kind) {
+    return null;
+  }
+
+  return (
+    <div className="mt-3 flex flex-wrap gap-2 text-xs text-neutral-600">
+      <span className="rounded bg-neutral-100 px-2 py-1 font-medium text-neutral-800">
+        Outreach: {outreachKindLabels[activity.outreach_kind]}
+      </span>
+      {activity.outreach_outcome ? (
+        <span className="rounded bg-neutral-100 px-2 py-1">
+          Outcome: {outreachOutcomeLabels[activity.outreach_outcome]}
+        </span>
+      ) : null}
+      <span className="rounded bg-neutral-100 px-2 py-1">
+        Pain: {painStatementLabels[activity.pain_statement]}
+      </span>
+      {activity.value_prop ? (
+        <span className="rounded bg-neutral-100 px-2 py-1">
+          Value Prop: {activity.value_prop.code}: {activity.value_prop.label}
+        </span>
+      ) : null}
+    </div>
   );
 }
 

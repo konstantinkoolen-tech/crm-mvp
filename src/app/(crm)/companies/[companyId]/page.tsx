@@ -18,6 +18,7 @@ import { getCompany } from "@/lib/db/companies";
 import { listActivitiesForCompany } from "@/lib/db/activities";
 import { listContactsForCompany } from "@/lib/db/contacts";
 import { listDealsForCompany } from "@/lib/db/deals";
+import { listActiveValueProps } from "@/lib/db/value-props";
 
 type CompanyDetailPageProps = {
   params: Promise<{
@@ -33,11 +34,12 @@ export default async function CompanyDetailPage({
   searchParams,
 }: CompanyDetailPageProps) {
   const [{ companyId }, { error }] = await Promise.all([params, searchParams]);
-  const [company, contacts, deals, activities] = await Promise.all([
+  const [company, contacts, deals, activities, valueProps] = await Promise.all([
     getCompany(companyId),
     listContactsForCompany(companyId),
     listDealsForCompany(companyId),
     listActivitiesForCompany(companyId),
+    listActiveValueProps(),
   ]);
 
   return (
@@ -120,6 +122,7 @@ export default async function CompanyDetailPage({
         companyId={company.id}
         contacts={contacts}
         activities={activities}
+        valueProps={valueProps}
       />
       <CompanyDeals companyId={company.id} deals={deals} />
       <CompanyActionForms
@@ -169,6 +172,10 @@ function errorMessage(error?: string) {
 
   if (error === "missing_due_date") {
     return "Bitte gib ein Faelligkeitsdatum fuer die Task ein.";
+  }
+
+  if (error === "missing_outreach_fields") {
+    return "Bitte waehle fuer Outreach-Aktivitaeten Outcome, Pain Aussage und Value Prop aus.";
   }
 
   return decodeURIComponent(error);
