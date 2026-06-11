@@ -151,8 +151,8 @@ export function ContactQuickActions({
                 <Button
                   type="button"
                   variant={includeTask ? "default" : "outline"}
-                  size="icon"
-                  className="size-9 rounded-full"
+                  size="sm"
+                  className="h-9 rounded-full px-3"
                   aria-label={
                     includeTask ? "Task-Erstellung entfernen" : "Task erstellen"
                   }
@@ -163,6 +163,7 @@ export function ContactQuickActions({
                     className={includeTask ? "rotate-45 transition" : "transition"}
                     aria-hidden="true"
                   />
+                  Task
                 </Button>
               </div>
 
