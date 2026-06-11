@@ -81,13 +81,13 @@ export function CompanyContacts({
             </Link>
           </div>
         ) : (
-          <div className="space-y-3">
-            <div className="grid grid-cols-[1.2fr_1fr_1.3fr_220px_120px] gap-4 px-4 text-xs font-medium text-neutral-500 max-lg:hidden">
+          <div className="space-y-3 overflow-x-auto">
+            <div className="grid min-w-[920px] grid-cols-[minmax(180px,1.2fr)_minmax(120px,0.8fr)_minmax(220px,1.2fr)_132px_220px] gap-4 px-4 text-xs font-medium text-neutral-500 max-lg:hidden">
               <span>Name</span>
               <span>Position</span>
               <span>Kontakt</span>
-              <span>Quick Actions</span>
-              <span className="text-right">Aktionen</span>
+              <span>Aktivitaet</span>
+              <span className="text-right">Verwalten</span>
             </div>
             {contacts.map((contact) => (
               <ContactRow
@@ -117,7 +117,7 @@ function ContactRow({
 
   return (
     <details className="group rounded-md border border-neutral-200 bg-white">
-      <summary className="grid cursor-pointer list-none gap-4 p-4 transition hover:bg-neutral-50 lg:grid-cols-[1.2fr_1fr_1.3fr_220px_120px] lg:items-center [&::-webkit-details-marker]:hidden">
+      <summary className="grid cursor-pointer list-none gap-4 p-4 transition hover:bg-neutral-50 lg:min-w-[920px] lg:grid-cols-[minmax(180px,1.2fr)_minmax(120px,0.8fr)_minmax(220px,1.2fr)_132px_220px] lg:items-center [&::-webkit-details-marker]:hidden">
         <div className="min-w-0">
           <div className="flex items-start gap-2">
             <ChevronDown
@@ -148,7 +148,11 @@ function ContactRow({
 
         <ContactLinks contact={contact} />
 
-        <QuickActions contact={contact} companyId={companyId} contactName={contactName} />
+        <QuickActions
+          contact={contact}
+          companyId={companyId}
+          contactName={contactName}
+        />
 
         <div className="flex justify-end gap-2">
           <Link
@@ -282,13 +286,15 @@ function QuickActions({
   return (
     <div
       className={
-        expanded
-          ? "flex flex-wrap gap-2"
-          : "grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-1"
+        expanded ? "flex flex-wrap gap-2" : "flex flex-wrap gap-1"
       }
     >
       {actions.map((action) => (
-        <form key={action.type} action={createActivity}>
+        <form
+          key={action.type}
+          action={createActivity}
+          className={expanded ? undefined : "shrink-0"}
+        >
           <input type="hidden" name="company_id" value={companyId} />
           <input type="hidden" name="contact_id" value={contact.id} />
           <input type="hidden" name="type" value={action.type} />
@@ -298,13 +304,16 @@ function QuickActions({
             type="submit"
             variant="outline"
             size="sm"
-            className="h-8 w-full px-2 text-xs"
+            className={
+              expanded
+                ? "h-8 px-2 text-xs"
+                : "size-8 rounded-md p-0 text-neutral-600 hover:text-neutral-950"
+            }
             title={`${action.label} hinzufuegen`}
+            aria-label={`${action.label} hinzufuegen`}
           >
             <ActionIcon icon={action.icon} />
-            <span className={expanded ? "inline" : "sr-only xl:not-sr-only"}>
-              {action.label}
-            </span>
+            <span className={expanded ? "inline" : "sr-only"}>{action.label}</span>
           </Button>
         </form>
       ))}
