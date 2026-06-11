@@ -32,6 +32,7 @@ function taskPayload(formData: FormData, ownerId: string) {
   return {
     owner_id: ownerId,
     company_id: nullableText(formData.get("company_id")),
+    contact_id: nullableText(formData.get("contact_id")),
     deal_id: nullableText(formData.get("deal_id")),
     title: requiredText(formData.get("title")),
     description: nullableText(formData.get("description")),

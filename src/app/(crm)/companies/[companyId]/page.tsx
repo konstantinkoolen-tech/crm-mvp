@@ -160,5 +160,13 @@ function errorMessage(error?: string) {
     return "Der Aktivitaet fehlt ein Unternehmen oder Deal.";
   }
 
+  if (error === "missing_task_title") {
+    return "Bitte gib einen Titel fuer die Follow-up Task ein.";
+  }
+
+  if (error === "missing_task_due_date") {
+    return "Bitte gib ein Faelligkeitsdatum fuer die Follow-up Task ein.";
+  }
+
   return decodeURIComponent(error);
 }

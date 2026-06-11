@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarDays, Mail, MessageSquare, Phone, X } from "lucide-react";
+import { CalendarDays, Mail, MessageSquare, Phone, Plus, X } from "lucide-react";
 import { createActivity } from "@/app/(crm)/activities/actions";
 import { Button } from "@/components/ui/button";
 import type { Contact } from "@/lib/db/contacts";
@@ -35,6 +35,7 @@ export function ContactQuickActions({
 }: ContactQuickActionsProps) {
   const [selectedAction, setSelectedAction] = useState<QuickAction | null>(null);
   const [dateTime, setDateTime] = useState(() => defaultDateTimeValue());
+  const [includeTask, setIncludeTask] = useState(false);
 
   const occurredAt = useMemo(() => {
     const parsed = new Date(dateTime);
@@ -61,6 +62,7 @@ export function ContactQuickActions({
               event.preventDefault();
               event.stopPropagation();
               setSelectedAction(action);
+              setIncludeTask(false);
             }}
           >
             <ActionIcon icon={action.icon} />
@@ -115,6 +117,9 @@ export function ContactQuickActions({
                 value={`${selectedAction.label} mit ${contactName}`}
               />
               <input type="hidden" name="occurred_at" value={occurredAt} />
+              {includeTask ? (
+                <input type="hidden" name="create_task" value="true" />
+              ) : null}
               <input type="hidden" name="return_to" value={`/companies/${companyId}`} />
 
               <label className="block">
@@ -141,6 +146,77 @@ export function ContactQuickActions({
                   className="mt-1 w-full resize-none rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
                 />
               </label>
+
+              <div className="flex justify-center">
+                <Button
+                  type="button"
+                  variant={includeTask ? "default" : "outline"}
+                  size="icon"
+                  className="size-9 rounded-full"
+                  aria-label={
+                    includeTask ? "Task-Erstellung entfernen" : "Task erstellen"
+                  }
+                  title={includeTask ? "Task-Erstellung entfernen" : "Task erstellen"}
+                  onClick={() => setIncludeTask((value) => !value)}
+                >
+                  <Plus
+                    className={includeTask ? "rotate-45 transition" : "transition"}
+                    aria-hidden="true"
+                  />
+                </Button>
+              </div>
+
+              {includeTask ? (
+                <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4">
+                  <div className="mb-3">
+                    <h3 className="text-sm font-semibold text-neutral-950">
+                      Follow-up Task
+                    </h3>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      Wird zusammen mit der Aktivitaet gespeichert.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="block">
+                      <span className="text-sm font-medium text-neutral-700">
+                        Aufgabe
+                      </span>
+                      <input
+                        name="task_title"
+                        required={includeTask}
+                        defaultValue={`Follow-up: ${selectedAction.label} mit ${contactName}`}
+                        className="mt-1 h-10 w-full rounded-md border border-neutral-300 bg-white px-3 text-sm text-neutral-950 outline-none transition focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="text-sm font-medium text-neutral-700">
+                        Faellig am
+                      </span>
+                      <input
+                        type="date"
+                        name="task_due_date"
+                        required={includeTask}
+                        defaultValue={defaultTaskDueDate()}
+                        className="mt-1 h-10 w-full rounded-md border border-neutral-300 bg-white px-3 text-sm text-neutral-950 outline-none transition focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="text-sm font-medium text-neutral-700">
+                        Task-Inhalt
+                      </span>
+                      <textarea
+                        name="task_description"
+                        rows={3}
+                        placeholder="Was soll als naechstes passieren?"
+                        className="mt-1 w-full resize-none rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+                      />
+                    </label>
+                  </div>
+                </div>
+              ) : null}
 
               <div className="flex justify-end gap-2">
                 <Button
@@ -185,4 +261,11 @@ function defaultDateTimeValue() {
   date.setSeconds(0, 0);
   const offset = date.getTimezoneOffset() * 60000;
   return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function defaultTaskDueDate() {
+  const date = new Date();
+  date.setDate(date.getDate() + 1);
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
 }

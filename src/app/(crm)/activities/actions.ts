@@ -41,6 +41,9 @@ export async function createActivity(formData: FormData) {
   const dealId = nullableText(formData.get("deal_id"));
   const returnTo = requiredText(formData.get("return_to")) || "/activities";
   const title = requiredText(formData.get("title"));
+  const shouldCreateTask = formData.get("create_task") === "true";
+  const taskTitle = requiredText(formData.get("task_title"));
+  const taskDueDate = nullableText(formData.get("task_due_date"));
 
   if (!companyId && !contactId && !dealId) {
     redirect(`${returnTo}?error=missing_context`);
@@ -48,6 +51,14 @@ export async function createActivity(formData: FormData) {
 
   if (!title) {
     redirect(`${returnTo}?error=missing_title`);
+  }
+
+  if (shouldCreateTask && !taskTitle) {
+    redirect(`${returnTo}?error=missing_task_title`);
+  }
+
+  if (shouldCreateTask && !taskDueDate) {
+    redirect(`${returnTo}?error=missing_task_due_date`);
   }
 
   const { supabase, user } = await getCompanyClient();
@@ -67,7 +78,27 @@ export async function createActivity(formData: FormData) {
     redirect(`${returnTo}?error=${encodeURIComponent(error.message)}`);
   }
 
+  if (shouldCreateTask) {
+    const { error: taskError } = await supabase.from("tasks").insert({
+      owner_id: user.id,
+      company_id: companyId,
+      contact_id: contactId,
+      deal_id: dealId,
+      title: taskTitle,
+      description: nullableText(formData.get("task_description")),
+      due_date: taskDueDate,
+      status: "open",
+      completed_at: null,
+    });
+
+    if (taskError) {
+      redirect(`${returnTo}?error=${encodeURIComponent(taskError.message)}`);
+    }
+  }
+
   revalidatePath("/activities");
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
   if (companyId) {
     revalidatePath(`/companies/${companyId}`);
   }
