@@ -1,4 +1,5 @@
-import { CalendarDays, ChevronRight, Pencil, Plus } from "lucide-react";
+import type { ReactNode } from "react";
+import { CalendarDays, ChevronRight, Pencil } from "lucide-react";
 import Link from "next/link";
 import { updateDealStage } from "@/app/(crm)/deals/actions";
 import { DealDeleteForm } from "@/components/crm/deal-delete-form";
@@ -14,9 +15,10 @@ import type { DealStage } from "@/types/database";
 
 type DealKanbanProps = {
   deals: DealWithCompany[];
+  emptyAction?: ReactNode;
 };
 
-export function DealKanban({ deals }: DealKanbanProps) {
+export function DealKanban({ deals, emptyAction }: DealKanbanProps) {
   if (deals.length === 0) {
     return (
       <Card>
@@ -27,10 +29,7 @@ export function DealKanban({ deals }: DealKanbanProps) {
           <p className="mt-2 max-w-sm text-sm text-neutral-600">
             Erstelle den ersten Deal und ordne ihn einer Pipeline-Stufe zu.
           </p>
-          <Link href="/deals/new" className={buttonVariants({ className: "mt-5" })}>
-            <Plus aria-hidden="true" />
-            Deal erstellen
-          </Link>
+          <div className="mt-5">{emptyAction}</div>
         </CardContent>
       </Card>
     );

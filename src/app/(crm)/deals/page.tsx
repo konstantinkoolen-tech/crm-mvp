@@ -1,11 +1,11 @@
-import { Plus } from "lucide-react";
-import Link from "next/link";
+import { DealCreateModalButton } from "@/components/crm/deal-create-modal-button";
 import { DealKanban } from "@/components/crm/deal-kanban";
-import { buttonVariants } from "@/components/ui/button";
+import { listCompanies } from "@/lib/db/companies";
 import { listDeals } from "@/lib/db/deals";
 
 export default function DealsPage() {
   const dealsPromise = listDeals();
+  const companiesPromise = listCompanies();
 
   return (
     <section className="space-y-6">
@@ -16,23 +16,36 @@ export default function DealsPage() {
             Einfache Kanban-Pipeline nach Stufen.
           </p>
         </div>
-        <Link href="/deals/new" className={buttonVariants()}>
-          <Plus aria-hidden="true" />
-          Deal
-        </Link>
+        <DealsCreateButton companiesPromise={companiesPromise} />
       </div>
 
-      <DealsPipeline dealsPromise={dealsPromise} />
+      <DealsPipeline dealsPromise={dealsPromise} companiesPromise={companiesPromise} />
     </section>
   );
 }
 
+async function DealsCreateButton({
+  companiesPromise,
+}: {
+  companiesPromise: ReturnType<typeof listCompanies>;
+}) {
+  const companies = await companiesPromise;
+  return <DealCreateModalButton companies={companies} />;
+}
+
 async function DealsPipeline({
   dealsPromise,
+  companiesPromise,
 }: {
   dealsPromise: ReturnType<typeof listDeals>;
+  companiesPromise: ReturnType<typeof listCompanies>;
 }) {
-  const deals = await dealsPromise;
+  const [deals, companies] = await Promise.all([dealsPromise, companiesPromise]);
 
-  return <DealKanban deals={deals} />;
+  return (
+    <DealKanban
+      deals={deals}
+      emptyAction={<DealCreateModalButton companies={companies} label="Deal erstellen" />}
+    />
+  );
 }
