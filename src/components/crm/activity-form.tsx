@@ -40,7 +40,7 @@ export function ActivityForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Aktivitaet erfassen</CardTitle>
+        <CardTitle>Aktivität erfassen</CardTitle>
         <CardDescription>Notiz, Call, E-Mail oder Meeting speichern.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -105,7 +105,7 @@ export function ActivityForm({
             <Textarea
               id="body"
               name="body"
-              placeholder="Was wurde besprochen? Was ist der naechste Schritt?"
+              placeholder="Was wurde besprochen? Was ist der nächste Schritt?"
             />
           </div>
 

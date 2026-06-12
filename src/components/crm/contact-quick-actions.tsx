@@ -114,8 +114,8 @@ export function ContactQuickActions({
                 ? "h-8 px-2 text-xs"
                 : "size-8 shrink-0 rounded-md p-0 text-neutral-600 hover:text-neutral-950"
             }
-            title={`${action.label} hinzufuegen`}
-            aria-label={`${action.label} hinzufuegen`}
+            title={`${action.label} hinzufügen`}
+            aria-label={`${action.label} hinzufügen`}
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
@@ -145,7 +145,7 @@ export function ContactQuickActions({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                  Aktivitaet
+                  Aktivität
                 </p>
                 <h2
                   id="activity-dialog-title"
@@ -198,13 +198,13 @@ export function ContactQuickActions({
 
               <label className="block">
                 <span className="text-sm font-medium text-neutral-700">
-                  Inhalt der Aktivitaet
+                  Inhalt der Aktivität
                 </span>
                 <textarea
                   name="body"
                   rows={5}
                   required
-                  placeholder="Kurze Zusammenfassung, Ergebnis oder naechster Schritt..."
+                  placeholder="Kurze Zusammenfassung, Ergebnis oder nächster Schritt..."
                   className="mt-1 w-full resize-none rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
                 />
               </label>
@@ -213,7 +213,7 @@ export function ContactQuickActions({
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-medium text-neutral-800">
-                      Art der Aktivitaet
+                      Art der Aktivität
                     </p>
                     <p className="mt-0.5 text-xs text-neutral-500">
                       Outreach nur markieren, wenn ein Symbol zutrifft.
@@ -260,7 +260,7 @@ export function ContactQuickActions({
                         className="mt-1 flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
                       >
                         <option value="" disabled>
-                          Outcome auswaehlen
+                          Outcome auswählen
                         </option>
                         {(outreachKind === "snowflake"
                           ? snowflakeOutcomes
@@ -300,7 +300,7 @@ export function ContactQuickActions({
                         className="mt-1 flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
                       >
                         <option value="" disabled>
-                          Value Prop auswaehlen
+                          Value Prop auswählen
                         </option>
                         {valueProps.map((valueProp) => (
                           <option key={valueProp.id} value={valueProp.id}>
@@ -340,7 +340,7 @@ export function ContactQuickActions({
                       Follow-up Task
                     </h3>
                     <p className="mt-1 text-xs text-neutral-500">
-                      Wird zusammen mit der Aktivitaet gespeichert.
+                      Wird zusammen mit der Aktivität gespeichert.
                     </p>
                   </div>
 
@@ -359,7 +359,7 @@ export function ContactQuickActions({
 
                     <label className="block">
                       <span className="text-sm font-medium text-neutral-700">
-                        Faellig am
+                        Fällig am
                       </span>
                       <input
                         type="date"
@@ -377,7 +377,7 @@ export function ContactQuickActions({
                       <textarea
                         name="task_description"
                         rows={3}
-                        placeholder="Was soll als naechstes passieren?"
+                        placeholder="Was soll als nächstes passieren?"
                         className="mt-1 w-full resize-none rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
                       />
                     </label>

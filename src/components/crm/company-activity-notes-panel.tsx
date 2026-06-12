@@ -84,7 +84,7 @@ export function CompanyActivityNotesPanel({
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle>Aktivitaeten und Notizen</CardTitle>
+            <CardTitle>Aktivitäten und Notizen</CardTitle>
             <CardDescription>
               Tasks und Unternehmensnotizen chronologisch sortiert.
             </CardDescription>
@@ -123,10 +123,10 @@ export function CompanyActivityNotesPanel({
             <div className="flex min-h-32 flex-col items-center justify-center rounded-md border border-dashed border-neutral-200 text-center">
               <CalendarDays className="mb-3 size-5 text-neutral-400" aria-hidden="true" />
               <p className="text-sm font-medium text-neutral-950">
-                Noch keine Eintraege
+                Noch keine Einträge
               </p>
               <p className="mt-1 text-sm text-neutral-500">
-                Erstelle eine Task oder Notiz fuer diesen Kontext.
+                Erstelle eine Task oder Notiz für diesen Kontext.
               </p>
             </div>
           ) : (
@@ -191,7 +191,7 @@ function LocalTaskStatusBadge({
   if (isOverdue(dueDate, status)) {
     return (
       <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">
-        Ueberfaellig
+        Überfällig
       </Badge>
     );
   }
@@ -274,7 +274,7 @@ function TaskModal({
             <Input id="company-task-title" name="title" required placeholder="Follow-up vorbereiten" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="company-task-due-date">Faellig am</Label>
+            <Label htmlFor="company-task-due-date">Fällig am</Label>
             <Input id="company-task-due-date" name="due_date" type="date" required />
           </div>
         </div>
@@ -298,7 +298,7 @@ function TaskModal({
 
         <div className="space-y-2">
           <Label htmlFor="company-task-description">Task-Inhalt</Label>
-          <Textarea id="company-task-description" name="description" rows={4} placeholder="Was soll als naechstes passieren?" />
+          <Textarea id="company-task-description" name="description" rows={4} placeholder="Was soll als nächstes passieren?" />
         </div>
 
         <div className="flex justify-end gap-2">

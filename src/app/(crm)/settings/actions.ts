@@ -37,7 +37,7 @@ async function ensureAdminOrRedirect() {
     settingsError(
       error instanceof Error
         ? error.message
-        : "Nur Admins koennen diese Einstellung aendern.",
+        : "Nur Admins können diese Einstellung ändern.",
     );
   }
 }
@@ -129,7 +129,7 @@ export async function moveValueProp(formData: FormData) {
   const direction = requiredText(formData.get("direction"));
 
   if (!valuePropId || (direction !== "up" && direction !== "down")) {
-    settingsError("Reihenfolge konnte nicht geaendert werden.");
+    settingsError("Reihenfolge konnte nicht geändert werden.");
   }
 
   const { data, error } = await supabase
@@ -193,7 +193,7 @@ export async function deleteValueProp(formData: FormData) {
   }
 
   revalidateValueProps();
-  settingsRedirect("Value Prop wurde geloescht.");
+  settingsRedirect("Value Prop wurde gelöscht.");
 }
 
 export async function inviteUser(formData: FormData) {
@@ -201,7 +201,7 @@ export async function inviteUser(formData: FormData) {
   const email = requiredText(formData.get("email"));
 
   if (!email) {
-    settingsError("Bitte gib eine E-Mail fuer die Einladung ein.");
+    settingsError("Bitte gib eine E-Mail für die Einladung ein.");
   }
 
   let admin: ReturnType<typeof getAdminClient>;
@@ -229,7 +229,7 @@ export async function sendPasswordRecovery(formData: FormData) {
   const email = requiredText(formData.get("email"));
 
   if (!email) {
-    settingsError("Bitte gib eine E-Mail fuer den Passwort-Reset ein.");
+    settingsError("Bitte gib eine E-Mail für den Passwort-Reset ein.");
   }
 
   const { supabase } = await getCompanyClient();

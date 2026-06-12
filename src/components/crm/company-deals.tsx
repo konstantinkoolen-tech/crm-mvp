@@ -31,7 +31,7 @@ export function CompanyDeals({ companyId, deals }: CompanyDealsProps) {
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle>Deals</CardTitle>
-          <CardDescription>Pipeline-Chancen fuer dieses Unternehmen.</CardDescription>
+          <CardDescription>Pipeline-Chancen für dieses Unternehmen.</CardDescription>
         </div>
         <DealCreateButton companyId={companyId} />
       </CardHeader>

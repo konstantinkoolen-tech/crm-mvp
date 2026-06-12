@@ -34,7 +34,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-2xl font-semibold text-neutral-950">Dashboard</h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Offene Follow-ups und Pipeline-Ueberblick fuer das CRM-MVP.
+          Offene Follow-ups und Pipeline-Überblick für das CRM-MVP.
         </p>
       </div>
 
@@ -70,7 +70,7 @@ async function DashboardContent({
         <MetricCard
           href="/dashboard"
           icon={<AlertCircle className="size-5 text-red-500" aria-hidden="true" />}
-          label="Ueberfaellig"
+          label="Überfällig"
           value={overdueTasks.length}
           tone="danger"
         />
@@ -90,19 +90,19 @@ async function DashboardContent({
 
       <Card>
         <CardHeader>
-          <CardTitle>Ueberfaellige Tasks</CardTitle>
+          <CardTitle>Überfällige Tasks</CardTitle>
           <CardDescription>
-            Offene Follow-ups mit Faelligkeitsdatum vor heute.
+            Offene Follow-ups mit Fälligkeitsdatum vor heute.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {overdueTasks.length === 0 ? (
             <div className="rounded-md border border-dashed border-neutral-200 py-10 text-center">
               <p className="text-sm font-medium text-neutral-950">
-                Keine ueberfaelligen Tasks
+                Keine überfälligen Tasks
               </p>
               <p className="mt-1 text-sm text-neutral-500">
-                Alles im gruenen Bereich.
+                Alles im grünen Bereich.
               </p>
             </div>
           ) : (
@@ -111,7 +111,7 @@ async function DashboardContent({
                 <TableRow>
                   <TableHead>Task</TableHead>
                   <TableHead>Kontext</TableHead>
-                  <TableHead>Faellig</TableHead>
+                  <TableHead>Fällig</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Aktionen</TableHead>
                 </TableRow>

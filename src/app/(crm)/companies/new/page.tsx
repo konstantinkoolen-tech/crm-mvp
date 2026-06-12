@@ -19,7 +19,7 @@ export default async function NewCompanyPage({
           Unternehmen erstellen
         </h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Erstelle einen neuen Account als Grundlage fuer Kontakte und Deals.
+          Erstelle einen neuen Account als Grundlage für Kontakte und Deals.
         </p>
       </div>
       <CompanyForm

@@ -34,7 +34,7 @@ export function TaskList({ ownerEmail, tasks }: TaskListProps) {
             Noch keine Tasks
           </h2>
           <p className="mt-2 max-w-sm text-sm text-neutral-600">
-            Erstelle Follow-ups mit Faelligkeit und Status.
+            Erstelle Follow-ups mit Fälligkeit und Status.
           </p>
           <Link href="/tasks/new" className={buttonVariants({ className: "mt-5" })}>
             <Plus aria-hidden="true" />
@@ -49,7 +49,7 @@ export function TaskList({ ownerEmail, tasks }: TaskListProps) {
     <Card>
       <CardHeader>
         <CardTitle>Alle Tasks</CardTitle>
-        <CardDescription>{tasks.length} Eintraege</CardDescription>
+        <CardDescription>{tasks.length} Einträge</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
@@ -57,8 +57,8 @@ export function TaskList({ ownerEmail, tasks }: TaskListProps) {
             <TableRow>
               <TableHead>Task</TableHead>
               <TableHead>Kontext</TableHead>
-              <TableHead>Zustaendig</TableHead>
-              <TableHead>Faellig</TableHead>
+              <TableHead>Zuständig</TableHead>
+              <TableHead>Fällig</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Aktionen</TableHead>
             </TableRow>

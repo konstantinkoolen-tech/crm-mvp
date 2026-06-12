@@ -20,7 +20,7 @@ export default async function NewDealPage({ searchParams }: NewDealPageProps) {
       <div>
         <h1 className="text-2xl font-semibold text-neutral-950">Deal erstellen</h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Lege einen Deal fuer ein Unternehmen an und starte ihn in der Pipeline.
+          Lege einen Deal für ein Unternehmen an und starte ihn in der Pipeline.
         </p>
       </div>
       <DealForm
@@ -40,7 +40,7 @@ function errorMessage(error?: string) {
   }
 
   if (error === "missing_company") {
-    return "Bitte waehle ein Unternehmen aus.";
+    return "Bitte wähle ein Unternehmen aus.";
   }
 
   if (error === "missing_title") {

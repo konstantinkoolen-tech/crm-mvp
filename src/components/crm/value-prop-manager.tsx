@@ -54,7 +54,7 @@ export function ValuePropManager({
             disabled={!isAdmin}
           >
             <Plus aria-hidden="true" />
-            Value Prop hinzufuegen
+            Value Prop hinzufügen
           </Button>
         </div>
 
@@ -140,11 +140,11 @@ export function ValuePropManager({
 
                 <div className="border-t border-neutral-200 px-4 py-4 sm:ml-[72px]">
                   <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                    Erklaerung
+                    Erklärung
                   </p>
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-neutral-700">
                     {valueProp.description?.trim() ||
-                      "Noch keine Erklaerung hinterlegt."}
+                      "Noch keine Erklärung hinterlegt."}
                   </p>
                 </div>
               </details>
@@ -230,7 +230,7 @@ function ValuePropModal({
             >
               {modal.mode === "edit"
                 ? `${valueProp?.code}: ${valueProp?.label}`
-                : "Value Prop hinzufuegen"}
+                : "Value Prop hinzufügen"}
             </h2>
           </div>
           <Button
@@ -295,7 +295,7 @@ function ValuePropModal({
           />
 
           <div className="space-y-2">
-            <Label htmlFor="value-prop-modal-description">Erklaerung</Label>
+            <Label htmlFor="value-prop-modal-description">Erklärung</Label>
             <Textarea
               id="value-prop-modal-description"
               name="description"
@@ -315,7 +315,7 @@ function ValuePropModal({
                 disabled={!isAdmin}
               >
                 <Trash2 aria-hidden="true" />
-                Loeschen
+                Löschen
               </Button>
             ) : (
               <span />

@@ -28,7 +28,7 @@ export default function ContactsPage() {
       <div>
         <h1 className="text-2xl font-semibold text-neutral-950">Kontakte</h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Alle Ansprechpartner ueber deine Unternehmen hinweg.
+          Alle Ansprechpartner über deine Unternehmen hinweg.
         </p>
       </div>
 
@@ -55,7 +55,7 @@ async function ContactsList({
             Noch keine Kontakte
           </h2>
           <p className="mt-2 max-w-sm text-sm text-neutral-600">
-            Kontakte werden ueber ein Unternehmensprofil erstellt.
+            Kontakte werden über ein Unternehmensprofil erstellt.
           </p>
           <Link href="/companies" className={buttonVariants({ className: "mt-5" })}>
             Zu Unternehmen
@@ -69,7 +69,7 @@ async function ContactsList({
     <Card>
       <CardHeader>
         <CardTitle>Alle Kontakte</CardTitle>
-        <CardDescription>{contacts.length} Eintraege</CardDescription>
+        <CardDescription>{contacts.length} Einträge</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>

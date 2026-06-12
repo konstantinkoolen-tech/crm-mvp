@@ -25,7 +25,7 @@ export default async function NewContactPage({
           Kontakt erstellen
         </h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Neuer Ansprechpartner fuer {company.name}.
+          Neuer Ansprechpartner für {company.name}.
         </p>
       </div>
       <ContactForm

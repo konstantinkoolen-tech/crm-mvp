@@ -32,7 +32,7 @@ export function CompanyForm({
           {company ? "Unternehmen bearbeiten" : "Unternehmen erstellen"}
         </CardTitle>
         <CardDescription>
-          Pflege die Basisdaten fuer Account Management und Pipeline-Arbeit.
+          Pflege die Basisdaten für Account Management und Pipeline-Arbeit.
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -22,7 +22,7 @@ export default async function NewTaskPage({ searchParams }: NewTaskPageProps) {
       <div>
         <h1 className="text-2xl font-semibold text-neutral-950">Task erstellen</h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Lege ein Follow-up mit Faelligkeitsdatum an.
+          Lege ein Follow-up mit Fälligkeitsdatum an.
         </p>
       </div>
       <TaskForm
@@ -47,7 +47,7 @@ function errorMessage(error?: string) {
   }
 
   if (error === "missing_due_date") {
-    return "Bitte waehle ein Faelligkeitsdatum.";
+    return "Bitte wähle ein Fälligkeitsdatum.";
   }
 
   return decodeURIComponent(error);

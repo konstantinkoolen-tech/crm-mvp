@@ -17,7 +17,7 @@ export function ContactDeleteForm({
       <input type="hidden" name="company_id" value={companyId} />
       <Button type="submit" variant="ghost" size="sm">
         <Trash2 aria-hidden="true" />
-        Loeschen
+        Löschen
       </Button>
     </form>
   );

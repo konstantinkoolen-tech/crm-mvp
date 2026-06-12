@@ -28,7 +28,7 @@ export function TaskActions({ taskId, status }: TaskActionsProps) {
         <input type="hidden" name="task_id" value={taskId} />
         <Button type="submit" variant="ghost" size="sm">
           <Trash2 aria-hidden="true" />
-          Loeschen
+          Löschen
         </Button>
       </form>
     </div>

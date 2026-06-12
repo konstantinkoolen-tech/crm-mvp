@@ -17,7 +17,7 @@ export function CompanyDeleteForm({ companyId, compact }: CompanyDeleteFormProps
         size={compact ? "sm" : "default"}
       >
         <Trash2 aria-hidden="true" />
-        Loeschen
+        Löschen
       </Button>
     </form>
   );

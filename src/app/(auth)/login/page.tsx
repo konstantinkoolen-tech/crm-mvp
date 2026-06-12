@@ -38,8 +38,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </h1>
         </div>
         <p className="max-w-md text-sm leading-6 text-neutral-600">
-          Unternehmen, Ansprechpartner, Deals, Aktivitaeten und Follow-ups an
-          einem geschuetzten Ort.
+          Unternehmen, Ansprechpartner, Deals, Aktivitäten und Follow-ups an
+          einem geschützten Ort.
         </p>
       </section>
 

@@ -35,7 +35,7 @@ export function MobileHeader({ userEmail }: MobileHeaderProps) {
           Deals
         </Link>
         <Link className="rounded-md px-3 py-2 text-neutral-700" href="/activities">
-          Aktivitaeten
+          Aktivitäten
         </Link>
         <Link className="rounded-md px-3 py-2 text-neutral-700" href="/tasks">
           Tasks

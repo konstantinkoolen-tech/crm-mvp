@@ -76,7 +76,7 @@ export function DealForm({
                   className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
                 >
                   <option value="" disabled>
-                    Unternehmen auswaehlen
+                    Unternehmen auswählen
                   </option>
                   {companies.map((company) => (
                     <option key={company.id} value={company.id}>
@@ -116,7 +116,7 @@ export function DealForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="value_currency">Waehrung</Label>
+                <Label htmlFor="value_currency">Währung</Label>
                 <Input
                   id="value_currency"
                   name="value_currency"
@@ -154,7 +154,7 @@ export function DealForm({
                   id="description"
                   name="description"
                   defaultValue={deal?.description ?? ""}
-                  placeholder="Kontext, Bedarf, naechster Schritt"
+                  placeholder="Kontext, Bedarf, nächster Schritt"
                 />
               </div>
             </div>

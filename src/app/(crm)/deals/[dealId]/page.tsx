@@ -42,7 +42,7 @@ export default async function DealDetailPage({
             className="mb-3 inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-950"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-            Zurueck
+            Zurück
           </Link>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-semibold text-neutral-950">{deal.title}</h1>
@@ -105,7 +105,7 @@ export default async function DealDetailPage({
       <ActivityTimeline
         activities={activities}
         returnTo={`/deals/${deal.id}`}
-        title="Deal-Aktivitaeten"
+        title="Deal-Aktivitäten"
         description="Chronologisch nach Zeitpunkt sortiert"
       />
     </section>
@@ -153,11 +153,11 @@ function errorMessage(error?: string) {
   }
 
   if (error === "missing_title") {
-    return "Bitte gib einen Titel fuer die Aktivitaet ein.";
+    return "Bitte gib einen Titel für die Aktivität ein.";
   }
 
   if (error === "missing_context") {
-    return "Der Aktivitaet fehlt ein Unternehmen oder Deal.";
+    return "Der Aktivität fehlt ein Unternehmen oder Deal.";
   }
 
   return decodeURIComponent(error);

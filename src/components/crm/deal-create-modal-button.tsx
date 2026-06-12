@@ -75,7 +75,7 @@ export function DealCreateModalButton({
                     className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
                   >
                     <option value="" disabled>
-                      Unternehmen auswaehlen
+                      Unternehmen auswählen
                     </option>
                     {companies.map((company) => (
                       <option key={company.id} value={company.id}>
@@ -111,7 +111,7 @@ export function DealCreateModalButton({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="global-deal-currency">Waehrung</Label>
+                  <Label htmlFor="global-deal-currency">Währung</Label>
                   <Input
                     id="global-deal-currency"
                     name="value_currency"
@@ -139,7 +139,7 @@ export function DealCreateModalButton({
                   <Textarea
                     id="global-deal-description"
                     name="description"
-                    placeholder="Kontext, Bedarf, naechster Schritt"
+                    placeholder="Kontext, Bedarf, nächster Schritt"
                   />
                 </div>
               </div>

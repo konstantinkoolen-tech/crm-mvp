@@ -30,7 +30,7 @@ export default async function ValuePropsPage({
       <div>
         <h1 className="text-2xl font-semibold text-neutral-950">Value Props</h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Outreach-Argumente verwalten und fuer Aktivitaeten auswaehlbar machen.
+          Outreach-Argumente verwalten und für Aktivitäten auswählbar machen.
         </p>
       </div>
 
@@ -50,7 +50,7 @@ export default async function ValuePropsPage({
           <CardHeader>
             <CardTitle>Admin-Zugriff erforderlich</CardTitle>
             <CardDescription>
-              Dein Profil hat aktuell keine Admin-Rechte fuer diese Einstellungen.
+              Dein Profil hat aktuell keine Admin-Rechte für diese Einstellungen.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -60,7 +60,7 @@ export default async function ValuePropsPage({
         <CardHeader>
           <CardTitle>Auswahl der Props</CardTitle>
           <CardDescription>
-            Eine Zeile pro Value Prop. Aufklappen zeigt die Erklaerung.
+            Eine Zeile pro Value Prop. Aufklappen zeigt die Erklärung.
           </CardDescription>
         </CardHeader>
         <CardContent>

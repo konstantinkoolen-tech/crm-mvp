@@ -73,7 +73,7 @@ export function CompanyContacts({
               Noch keine Kontakte
             </p>
             <p className="mt-1 max-w-sm text-sm text-neutral-500">
-              Fuege die ersten Ansprechpartner fuer dieses Unternehmen hinzu.
+              Füge die ersten Ansprechpartner für dieses Unternehmen hinzu.
             </p>
             <div className="mt-4">
               <ContactCreateButton companyId={companyId} companyName={companyName} />
@@ -85,7 +85,7 @@ export function CompanyContacts({
               <span>Name</span>
               <span>Position</span>
               <span>Kontakt</span>
-              <span>Aktivitaet</span>
+              <span>Aktivität</span>
               <span className="text-right">Verwalten</span>
             </div>
             {contacts.map((contact) => (
@@ -172,10 +172,10 @@ function ContactRow({
         <div className="flex flex-col gap-3 lg:ml-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h3 className="text-sm font-semibold text-neutral-950">
-              Aktivitaeten mit {contactName}
+              Aktivitäten mit {contactName}
             </h3>
             <p className="mt-1 text-xs text-neutral-500">
-              {activities.length} Eintraege
+              {activities.length} Einträge
             </p>
           </div>
           <ContactQuickActions
@@ -189,7 +189,7 @@ function ContactRow({
 
         {activities.length === 0 ? (
           <div className="mt-4 rounded-md border border-dashed border-neutral-200 px-4 py-5 text-sm text-neutral-500 lg:ml-6">
-            Noch keine Aktivitaeten fuer diesen Kontakt.
+            Noch keine Aktivitäten für diesen Kontakt.
           </div>
         ) : (
           <ol className="mt-4 space-y-3 lg:ml-6">

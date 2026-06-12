@@ -38,7 +38,7 @@ export function TaskForm({
       <CardHeader>
         <CardTitle>{task ? "Task bearbeiten" : "Task erstellen"}</CardTitle>
         <CardDescription>
-          Zustaendig ist der angemeldete Nutzer
+          Zuständig ist der angemeldete Nutzer
           {ownerEmail ? ` (${ownerEmail})` : ""}.
         </CardDescription>
       </CardHeader>
@@ -65,7 +65,7 @@ export function TaskForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="due_date">Faelligkeit</Label>
+              <Label htmlFor="due_date">Fälligkeit</Label>
               <Input
                 id="due_date"
                 name="due_date"
@@ -131,7 +131,7 @@ export function TaskForm({
                 id="description"
                 name="description"
                 defaultValue={task?.description ?? ""}
-                placeholder="Kontext oder naechster Schritt"
+                placeholder="Kontext oder nächster Schritt"
               />
             </div>
           </div>

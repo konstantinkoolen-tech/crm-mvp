@@ -31,7 +31,7 @@ export function CompanyActionForms({
       <Card>
         <CardHeader>
           <CardTitle>Task erstellen</CardTitle>
-          <CardDescription>Follow-up fuer dieses Unternehmen planen.</CardDescription>
+          <CardDescription>Follow-up für dieses Unternehmen planen.</CardDescription>
         </CardHeader>
         <CardContent>
           {error ? <ErrorMessage message={error} /> : null}
@@ -53,7 +53,7 @@ export function CompanyActionForms({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="company-task-due-date">Faellig am</Label>
+                <Label htmlFor="company-task-due-date">Fällig am</Label>
                 <Input
                   id="company-task-due-date"
                   name="due_date"
@@ -86,7 +86,7 @@ export function CompanyActionForms({
                 id="company-task-description"
                 name="description"
                 rows={4}
-                placeholder="Was soll als naechstes passieren?"
+                placeholder="Was soll als nächstes passieren?"
               />
             </div>
 

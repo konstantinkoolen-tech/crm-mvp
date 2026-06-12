@@ -32,7 +32,7 @@ export default async function CompaniesPage() {
         <div>
           <h1 className="text-2xl font-semibold text-neutral-950">Unternehmen</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            Accounts fuer Recruiting, Sales und Customer Development verwalten.
+            Accounts für Recruiting, Sales und Customer Development verwalten.
           </p>
         </div>
         <CompanyCreateModalButton />
@@ -62,7 +62,7 @@ function CompanyList({
           </h2>
           <p className="mt-2 max-w-sm text-sm text-neutral-600">
             Lege den ersten Account an, um Kontakte, Deals und Follow-ups daran
-            zu haengen.
+            zu hängen.
           </p>
           <div className="mt-5">
             <CompanyCreateModalButton label="Unternehmen erstellen" />
@@ -76,7 +76,7 @@ function CompanyList({
     <Card>
       <CardHeader>
         <CardTitle>Alle Unternehmen</CardTitle>
-        <CardDescription>{companies.length} Eintraege</CardDescription>
+        <CardDescription>{companies.length} Einträge</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>

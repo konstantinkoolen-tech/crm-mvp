@@ -21,7 +21,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
         <div>
           <h1 className="text-2xl font-semibold text-neutral-950">Tasks</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            Follow-ups mit Faelligkeitsdatum, Status und zustaendigem Nutzer.
+            Follow-ups mit Fälligkeitsdatum, Status und zuständigem Nutzer.
           </p>
         </div>
         <Link href="/tasks/new" className={buttonVariants()}>

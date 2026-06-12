@@ -48,7 +48,7 @@ export function ContactCreateButton({
       {open ? (
         <ModalShell
           eyebrow="Kontakt"
-          title={`Kontakt fuer ${companyName ?? "Unternehmen"} erstellen`}
+          title={`Kontakt für ${companyName ?? "Unternehmen"} erstellen`}
           onClose={() => setOpen(false)}
         >
           <form action={createContact} className="space-y-5">
@@ -145,7 +145,7 @@ function ContactFields() {
         <Textarea
           id="modal-contact-notes"
           name="notes"
-          placeholder="Rolle im Buying Committee, Kontext, naechster Schritt"
+          placeholder="Rolle im Buying Committee, Kontext, nächster Schritt"
         />
       </div>
     </div>
@@ -184,7 +184,7 @@ function DealFields() {
         <Input id="modal-deal-value" name="value_amount" type="number" min="0" step="0.01" placeholder="25000" />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="modal-deal-currency">Waehrung</Label>
+        <Label htmlFor="modal-deal-currency">Währung</Label>
         <Input id="modal-deal-currency" name="value_currency" maxLength={3} defaultValue="EUR" />
       </div>
       <div className="space-y-2">
@@ -200,7 +200,7 @@ function DealFields() {
         <Textarea
           id="modal-deal-description"
           name="description"
-          placeholder="Kontext, Bedarf, naechster Schritt"
+          placeholder="Kontext, Bedarf, nächster Schritt"
         />
       </div>
     </div>

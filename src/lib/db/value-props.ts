@@ -70,7 +70,7 @@ export async function requireAdminProfile() {
   const profile = await getCurrentProfile();
 
   if (profile.role !== "admin" || profile.status !== "active") {
-    throw new Error("Nur Admins koennen diese Einstellung aendern.");
+    throw new Error("Nur Admins können diese Einstellung ändern.");
   }
 
   return profile;

@@ -31,7 +31,7 @@ export default async function EditTaskPage({
       <div>
         <h1 className="text-2xl font-semibold text-neutral-950">Task bearbeiten</h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Status, Faelligkeit und Kontext aktualisieren.
+          Status, Fälligkeit und Kontext aktualisieren.
         </p>
       </div>
       <TaskForm
@@ -57,7 +57,7 @@ function errorMessage(error?: string) {
   }
 
   if (error === "missing_due_date") {
-    return "Bitte waehle ein Faelligkeitsdatum.";
+    return "Bitte wähle ein Fälligkeitsdatum.";
   }
 
   return decodeURIComponent(error);

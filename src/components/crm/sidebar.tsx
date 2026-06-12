@@ -35,7 +35,7 @@ const navigation = [
   },
   {
     href: "/activities",
-    label: "Aktivitaeten",
+    label: "Aktivitäten",
     icon: NotebookText,
   },
   {

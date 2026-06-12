@@ -7,9 +7,9 @@ export default function ActivitiesPage() {
   return (
     <section className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-950">Aktivitaeten</h1>
+        <h1 className="text-2xl font-semibold text-neutral-950">Aktivitäten</h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Notizen, Calls, E-Mails und Meetings chronologisch ueber alle Kontexte.
+          Notizen, Calls, E-Mails und Meetings chronologisch über alle Kontexte.
         </p>
       </div>
       <ActivitiesList activitiesPromise={activitiesPromise} />
@@ -28,8 +28,8 @@ async function ActivitiesList({
     <ActivityTimeline
       activities={activities}
       returnTo="/activities"
-      title="Alle Aktivitaeten"
-      description="Neueste Eintraege zuerst"
+      title="Alle Aktivitäten"
+      description="Neueste Einträge zuerst"
     />
   );
 }

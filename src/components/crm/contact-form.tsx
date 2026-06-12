@@ -35,7 +35,7 @@ export function ContactForm({
         <CardTitle>{contact ? "Kontakt bearbeiten" : "Kontakt erstellen"}</CardTitle>
         <CardDescription>
           {companyName
-            ? `Ansprechpartner fuer ${companyName}`
+            ? `Ansprechpartner für ${companyName}`
             : "Ansprechpartner einem Unternehmen zuordnen"}
         </CardDescription>
       </CardHeader>
@@ -136,7 +136,7 @@ export function ContactForm({
                 id="notes"
                 name="notes"
                 defaultValue={contact?.notes ?? ""}
-                placeholder="Rolle im Buying Committee, Kontext, naechster Schritt"
+                placeholder="Rolle im Buying Committee, Kontext, nächster Schritt"
               />
             </div>
           </div>

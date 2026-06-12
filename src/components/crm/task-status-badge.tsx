@@ -9,7 +9,7 @@ type TaskStatusBadgeProps = {
 
 export function TaskStatusBadge({ dueDate, status }: TaskStatusBadgeProps) {
   if (isTaskOverdue({ due_date: dueDate ?? null, status })) {
-    return <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">Ueberfaellig</Badge>;
+    return <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">Überfällig</Badge>;
   }
 
   return (

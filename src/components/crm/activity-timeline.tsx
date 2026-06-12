@@ -27,7 +27,7 @@ type ActivityTimelineProps = {
 export function ActivityTimeline({
   activities,
   returnTo,
-  title = "Aktivitaeten",
+  title = "Aktivitäten",
   description = "Chronologische Timeline",
 }: ActivityTimelineProps) {
   return (
@@ -41,10 +41,10 @@ export function ActivityTimeline({
           <div className="flex min-h-32 flex-col items-center justify-center rounded-md border border-dashed border-neutral-200 text-center">
             <CalendarClock className="mb-3 size-5 text-neutral-400" aria-hidden="true" />
             <p className="text-sm font-medium text-neutral-950">
-              Noch keine Aktivitaeten
+              Noch keine Aktivitäten
             </p>
             <p className="mt-1 text-sm text-neutral-500">
-              Erstelle die erste Notiz fuer diesen Kontext.
+              Erstelle die erste Notiz für diesen Kontext.
             </p>
           </div>
         ) : (
@@ -86,7 +86,7 @@ export function ActivityTimeline({
                       <input type="hidden" name="return_to" value={returnTo} />
                       <Button type="submit" variant="ghost" size="sm">
                         <Trash2 aria-hidden="true" />
-                        Loeschen
+                        Löschen
                       </Button>
                     </form>
                   </div>
