@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CompanyCreateModalButton } from "@/components/crm/company-create-modal-button";
 import { CompanyDeleteForm } from "@/components/crm/company-delete-form";
 import { CompanyStatusBadge } from "@/components/crm/company-status-badge";
+import { DealStageBadge } from "@/components/crm/deal-stage-badge";
 import {
   Card,
   CardContent,
@@ -19,9 +20,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { listCompanies } from "@/lib/db/companies";
+import { dealStages, listDeals, type DealWithCompany } from "@/lib/db/deals";
 
 export default async function CompaniesPage() {
-  const companies = await listCompanies();
+  const [companies, deals] = await Promise.all([listCompanies(), listDeals()]);
+  const dealsByCompany = groupDealsByCompany(deals);
 
   return (
     <section className="space-y-6">
@@ -35,12 +38,18 @@ export default async function CompaniesPage() {
         <CompanyCreateModalButton />
       </div>
 
-      <CompanyList companies={companies} />
+      <CompanyList companies={companies} dealsByCompany={dealsByCompany} />
     </section>
   );
 }
 
-function CompanyList({ companies }: { companies: Awaited<ReturnType<typeof listCompanies>> }) {
+function CompanyList({
+  companies,
+  dealsByCompany,
+}: {
+  companies: Awaited<ReturnType<typeof listCompanies>>;
+  dealsByCompany: Map<string, DealWithCompany[]>;
+}) {
   if (companies.length === 0) {
     return (
       <Card>
@@ -76,6 +85,7 @@ function CompanyList({ companies }: { companies: Awaited<ReturnType<typeof listC
               <TableHead>Name</TableHead>
               <TableHead>Branche</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Deal-Status</TableHead>
               <TableHead>Mitarbeiter</TableHead>
               <TableHead className="text-right">Aktionen</TableHead>
             </TableRow>
@@ -100,6 +110,9 @@ function CompanyList({ companies }: { companies: Awaited<ReturnType<typeof listC
                 <TableCell>
                   <CompanyStatusBadge status={company.status} />
                 </TableCell>
+                <TableCell>
+                  <CompanyDealStatus deals={dealsByCompany.get(company.id) ?? []} />
+                </TableCell>
                 <TableCell>{company.employee_count ?? "-"}</TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-2">
@@ -119,4 +132,54 @@ function CompanyList({ companies }: { companies: Awaited<ReturnType<typeof listC
       </CardContent>
     </Card>
   );
+}
+
+function CompanyDealStatus({ deals }: { deals: DealWithCompany[] }) {
+  const stageCounts = dealStages
+    .map((stage) => ({
+      stage,
+      count: deals.filter((deal) => deal.stage === stage).length,
+    }))
+    .filter((stage) => stage.count > 0);
+
+  if (stageCounts.length === 0) {
+    return (
+      <Link
+        href="/deals"
+        className="text-sm text-neutral-500 transition hover:text-neutral-950 hover:underline"
+      >
+        Keine Deals
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      href="/deals"
+      className="inline-flex flex-wrap items-center gap-1.5 transition hover:opacity-80"
+      aria-label="Zur Deals-Pipeline"
+      title="Zur Deals-Pipeline"
+    >
+      {stageCounts.map(({ stage, count }) => (
+        <span className="inline-flex items-center gap-1" key={stage}>
+          <DealStageBadge stage={stage} />
+          {count > 1 ? (
+            <span className="text-xs font-medium text-neutral-500">{count}</span>
+          ) : null}
+        </span>
+      ))}
+    </Link>
+  );
+}
+
+function groupDealsByCompany(deals: DealWithCompany[]) {
+  const dealsByCompany = new Map<string, DealWithCompany[]>();
+
+  for (const deal of deals) {
+    const companyDeals = dealsByCompany.get(deal.company_id) ?? [];
+    companyDeals.push(deal);
+    dealsByCompany.set(deal.company_id, companyDeals);
+  }
+
+  return dealsByCompany;
 }
