@@ -74,26 +74,29 @@ function dealPayload(formData: FormData, ownerId: string) {
 }
 
 export async function createDeal(formData: FormData) {
+  const returnTo = requiredText(formData.get("return_to"));
   const { supabase, user } = await getCompanyClient();
   const payload = dealPayload(formData, user.id);
+  const errorTo = returnTo || "/deals/new";
+  const successTo = returnTo || "/deals";
 
   if (!payload.company_id) {
-    redirect("/deals/new?error=missing_company");
+    redirect(`${errorTo}?error=missing_company`);
   }
 
   if (!payload.title) {
-    redirect("/deals/new?error=missing_title");
+    redirect(`${errorTo}?error=missing_title`);
   }
 
   const { error } = await supabase.from("deals").insert(payload);
 
   if (error) {
-    redirect(`/deals/new?error=${encodeURIComponent(error.message)}`);
+    redirect(`${errorTo}?error=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath("/deals");
   revalidatePath(`/companies/${payload.company_id}`);
-  redirect("/deals");
+  redirect(successTo);
 }
 
 export async function updateDeal(formData: FormData) {

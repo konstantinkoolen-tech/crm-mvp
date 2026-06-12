@@ -1,7 +1,6 @@
 import { ArrowLeft, Pencil } from "lucide-react";
 import Link from "next/link";
-import { ActivityTimeline } from "@/components/crm/activity-timeline";
-import { CompanyActionForms } from "@/components/crm/company-action-forms";
+import { CompanyActivityNotesPanel } from "@/components/crm/company-activity-notes-panel";
 import { CompanyContacts } from "@/components/crm/company-contacts";
 import { CompanyDeals } from "@/components/crm/company-deals";
 import { CompanyDeleteForm } from "@/components/crm/company-delete-form";
@@ -18,6 +17,7 @@ import { getCompany } from "@/lib/db/companies";
 import { listActivitiesForCompany } from "@/lib/db/activities";
 import { listContactsForCompany } from "@/lib/db/contacts";
 import { listDealsForCompany } from "@/lib/db/deals";
+import { listTasksForCompany } from "@/lib/db/tasks";
 import { listActiveValueProps } from "@/lib/db/value-props";
 
 type CompanyDetailPageProps = {
@@ -34,11 +34,12 @@ export default async function CompanyDetailPage({
   searchParams,
 }: CompanyDetailPageProps) {
   const [{ companyId }, { error }] = await Promise.all([params, searchParams]);
-  const [company, contacts, deals, activities, valueProps] = await Promise.all([
+  const [company, contacts, deals, activities, tasks, valueProps] = await Promise.all([
     getCompany(companyId),
     listContactsForCompany(companyId),
     listDealsForCompany(companyId),
     listActivitiesForCompany(companyId),
+    listTasksForCompany(companyId),
     listActiveValueProps(),
   ]);
 
@@ -120,21 +121,18 @@ export default async function CompanyDetailPage({
 
       <CompanyContacts
         companyId={company.id}
+        companyName={company.name}
         contacts={contacts}
         activities={activities}
         valueProps={valueProps}
       />
       <CompanyDeals companyId={company.id} deals={deals} />
-      <CompanyActionForms
+      <CompanyActivityNotesPanel
         companyId={company.id}
         contacts={contacts}
-        error={errorMessage(error)}
-      />
-      <ActivityTimeline
+        tasks={tasks}
         activities={activities}
-        returnTo={`/companies/${company.id}`}
-        title="Aktivitaeten und Notizen"
-        description="Chronologisch nach Zeitpunkt sortiert"
+        error={errorMessage(error)}
       />
     </section>
   );

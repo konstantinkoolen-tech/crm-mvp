@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
+import { DealCreateButton } from "@/components/crm/company-create-buttons";
 import { DealStageBadge } from "@/components/crm/deal-stage-badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -32,10 +33,7 @@ export function CompanyDeals({ companyId, deals }: CompanyDealsProps) {
           <CardTitle>Deals</CardTitle>
           <CardDescription>Pipeline-Chancen fuer dieses Unternehmen.</CardDescription>
         </div>
-        <Link href={`/deals/new?companyId=${companyId}`} className={buttonVariants({ size: "sm" })}>
-          <Plus aria-hidden="true" />
-          Deal
-        </Link>
+        <DealCreateButton companyId={companyId} />
       </CardHeader>
       <CardContent>
         {deals.length === 0 ? (
@@ -44,13 +42,9 @@ export function CompanyDeals({ companyId, deals }: CompanyDealsProps) {
             <p className="mt-1 max-w-sm text-sm text-neutral-500">
               Erstelle einen Deal und ordne ihn diesem Unternehmen zu.
             </p>
-            <Link
-              href={`/deals/new?companyId=${companyId}`}
-              className={buttonVariants({ className: "mt-4", size: "sm" })}
-            >
-              <Plus aria-hidden="true" />
-              Deal erstellen
-            </Link>
+            <div className="mt-4">
+              <DealCreateButton companyId={companyId} />
+            </div>
           </div>
         ) : (
           <Table>

@@ -102,6 +102,23 @@ export async function listOpenTasks() {
   return (data ?? []) as unknown as TaskWithContext[];
 }
 
+export async function listTasksForCompany(companyId: string) {
+  const { supabase } = await getCompanyClient();
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .select(`${taskSelect}, company:companies(id, name), deal:deals(id, title)`)
+    .eq("company_id", companyId)
+    .order("due_date", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []) as unknown as TaskWithContext[];
+}
+
 export async function listOverdueTasks() {
   const tasks = await listOpenTasks();
   return tasks.filter(isTaskOverdue);

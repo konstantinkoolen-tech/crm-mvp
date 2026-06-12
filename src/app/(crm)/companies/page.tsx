@@ -1,8 +1,8 @@
-import { Building2, Plus } from "lucide-react";
+import { Building2 } from "lucide-react";
 import Link from "next/link";
+import { CompanyCreateModalButton } from "@/components/crm/company-create-modal-button";
 import { CompanyDeleteForm } from "@/components/crm/company-delete-form";
 import { CompanyStatusBadge } from "@/components/crm/company-status-badge";
-import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -32,10 +32,7 @@ export default async function CompaniesPage() {
             Accounts fuer Recruiting, Sales und Customer Development verwalten.
           </p>
         </div>
-        <Link href="/companies/new" className={buttonVariants()}>
-          <Plus aria-hidden="true" />
-          Neu
-        </Link>
+        <CompanyCreateModalButton />
       </div>
 
       <CompanyList companies={companies} />
@@ -58,10 +55,9 @@ function CompanyList({ companies }: { companies: Awaited<ReturnType<typeof listC
             Lege den ersten Account an, um Kontakte, Deals und Follow-ups daran
             zu haengen.
           </p>
-          <Link href="/companies/new" className={buttonVariants({ className: "mt-5" })}>
-            <Plus aria-hidden="true" />
-            Unternehmen erstellen
-          </Link>
+          <div className="mt-5">
+            <CompanyCreateModalButton label="Unternehmen erstellen" />
+          </div>
         </CardContent>
       </Card>
     );
@@ -109,7 +105,7 @@ function CompanyList({ companies }: { companies: Awaited<ReturnType<typeof listC
                   <div className="flex justify-end gap-2">
                     <Link
                       href={`/companies/${company.id}/edit`}
-                      className={buttonVariants({ variant: "outline", size: "sm" })}
+                      className="inline-flex h-9 items-center justify-center rounded-md border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-950 transition hover:bg-neutral-100"
                     >
                       Bearbeiten
                     </Link>

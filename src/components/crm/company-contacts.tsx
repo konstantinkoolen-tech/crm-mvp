@@ -8,6 +8,7 @@ import {
 import Link from "next/link";
 import { ContactQuickActions } from "@/components/crm/contact-quick-actions";
 import { ContactDeleteForm } from "@/components/crm/contact-delete-form";
+import { ContactCreateButton } from "@/components/crm/company-create-buttons";
 import { ContactStatusBadge } from "@/components/crm/contact-status-badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -29,6 +30,7 @@ import type { ValueProp } from "@/lib/db/value-props";
 
 type CompanyContactsProps = {
   companyId: string;
+  companyName?: string;
   contacts: Contact[];
   activities: ActivityWithContext[];
   valueProps: ValueProp[];
@@ -36,6 +38,7 @@ type CompanyContactsProps = {
 
 export function CompanyContacts({
   companyId,
+  companyName,
   contacts,
   activities,
   valueProps,
@@ -61,13 +64,7 @@ export function CompanyContacts({
             Ansprechpartner, die diesem Unternehmen zugeordnet sind.
           </CardDescription>
         </div>
-        <Link
-          href={`/companies/${companyId}/contacts/new`}
-          className={buttonVariants({ size: "sm" })}
-        >
-          <Plus aria-hidden="true" />
-          Kontakt
-        </Link>
+        <ContactCreateButton companyId={companyId} companyName={companyName} />
       </CardHeader>
       <CardContent>
         {contacts.length === 0 ? (
@@ -78,13 +75,9 @@ export function CompanyContacts({
             <p className="mt-1 max-w-sm text-sm text-neutral-500">
               Fuege die ersten Ansprechpartner fuer dieses Unternehmen hinzu.
             </p>
-            <Link
-              href={`/companies/${companyId}/contacts/new`}
-              className={buttonVariants({ className: "mt-4", size: "sm" })}
-            >
-              <Plus aria-hidden="true" />
-              Kontakt erstellen
-            </Link>
+            <div className="mt-4">
+              <ContactCreateButton companyId={companyId} companyName={companyName} />
+            </div>
           </div>
         ) : (
           <div className="space-y-3 overflow-x-auto">
