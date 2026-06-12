@@ -2,7 +2,7 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import { TaskList } from "@/components/crm/task-list";
 import { buttonVariants } from "@/components/ui/button";
-import { getCompanyClient } from "@/lib/db/companies";
+import { displayNameForProfile, getCurrentProfile } from "@/lib/db/profiles";
 import { listTasks } from "@/lib/db/tasks";
 
 type TasksPageProps = {
@@ -12,7 +12,7 @@ type TasksPageProps = {
 };
 
 export default async function TasksPage({ searchParams }: TasksPageProps) {
-  const dataPromise = Promise.all([listTasks(), getCompanyClient()]);
+  const dataPromise = Promise.all([listTasks(), getCurrentProfile()]);
   const { error } = await searchParams;
 
   return (
@@ -45,12 +45,12 @@ async function Tasks({
   dataPromise,
 }: {
   dataPromise: Promise<
-    [Awaited<ReturnType<typeof listTasks>>, Awaited<ReturnType<typeof getCompanyClient>>]
+    [Awaited<ReturnType<typeof listTasks>>, Awaited<ReturnType<typeof getCurrentProfile>>]
   >;
 }) {
-  const [tasks, { user }] = await dataPromise;
+  const [tasks, profile] = await dataPromise;
 
-  return <TaskList ownerEmail={user.email} tasks={tasks} />;
+  return <TaskList ownerName={displayNameForProfile(profile)} tasks={tasks} />;
 }
 
 function errorMessage(error: string) {

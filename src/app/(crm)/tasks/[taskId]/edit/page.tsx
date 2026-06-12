@@ -1,7 +1,8 @@
 import { updateTask } from "@/app/(crm)/tasks/actions";
 import { TaskForm } from "@/components/crm/task-form";
-import { getCompanyClient, listCompanies } from "@/lib/db/companies";
+import { listCompanies } from "@/lib/db/companies";
 import { listDeals } from "@/lib/db/deals";
+import { displayNameForProfile, getCurrentProfile } from "@/lib/db/profiles";
 import { getTask } from "@/lib/db/tasks";
 
 type EditTaskPageProps = {
@@ -17,12 +18,12 @@ export default async function EditTaskPage({
   params,
   searchParams,
 }: EditTaskPageProps) {
-  const [{ taskId }, { error }, companies, deals, { user }] = await Promise.all([
+  const [{ taskId }, { error }, companies, deals, profile] = await Promise.all([
     params,
     searchParams,
     listCompanies(),
     listDeals(),
-    getCompanyClient(),
+    getCurrentProfile(),
   ]);
   const task = await getTask(taskId);
 
@@ -38,7 +39,7 @@ export default async function EditTaskPage({
         action={updateTask}
         companies={companies}
         deals={deals}
-        ownerEmail={user.email}
+        ownerName={displayNameForProfile(profile)}
         task={task}
         error={errorMessage(error)}
         submitLabel="Speichern"

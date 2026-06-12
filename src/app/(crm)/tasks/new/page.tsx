@@ -1,7 +1,8 @@
 import { createTask } from "@/app/(crm)/tasks/actions";
 import { TaskForm } from "@/components/crm/task-form";
-import { getCompanyClient, listCompanies } from "@/lib/db/companies";
+import { listCompanies } from "@/lib/db/companies";
 import { listDeals } from "@/lib/db/deals";
+import { displayNameForProfile, getCurrentProfile } from "@/lib/db/profiles";
 
 type NewTaskPageProps = {
   searchParams: Promise<{
@@ -10,11 +11,11 @@ type NewTaskPageProps = {
 };
 
 export default async function NewTaskPage({ searchParams }: NewTaskPageProps) {
-  const [{ error }, companies, deals, { user }] = await Promise.all([
+  const [{ error }, companies, deals, profile] = await Promise.all([
     searchParams,
     listCompanies(),
     listDeals(),
-    getCompanyClient(),
+    getCurrentProfile(),
   ]);
 
   return (
@@ -29,7 +30,7 @@ export default async function NewTaskPage({ searchParams }: NewTaskPageProps) {
         action={createTask}
         companies={companies}
         deals={deals}
-        ownerEmail={user.email}
+        ownerName={displayNameForProfile(profile)}
         error={errorMessage(error)}
         submitLabel="Erstellen"
       />

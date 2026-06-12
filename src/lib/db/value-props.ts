@@ -1,4 +1,5 @@
 import { getCompanyClient } from "@/lib/db/companies";
+export { getCurrentProfile, requireAdminProfile } from "@/lib/db/profiles";
 
 export type ValueProp = {
   id: string;
@@ -43,35 +44,4 @@ export async function listValuePropsForSettings() {
   }
 
   return (data ?? []) as ValueProp[];
-}
-
-export async function getCurrentProfile() {
-  const { supabase, user } = await getCompanyClient();
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, email, role, status")
-    .eq("id", user.id)
-    .single();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return data as {
-    id: string;
-    email: string | null;
-    role: string | null;
-    status: "active" | "inactive";
-  };
-}
-
-export async function requireAdminProfile() {
-  const profile = await getCurrentProfile();
-
-  if (profile.role !== "admin" || profile.status !== "active") {
-    throw new Error("Nur Admins können diese Einstellung ändern.");
-  }
-
-  return profile;
 }

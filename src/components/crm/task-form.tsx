@@ -18,7 +18,7 @@ type TaskFormProps = {
   action: (formData: FormData) => Promise<void>;
   companies: Company[];
   deals: DealWithCompany[];
-  ownerEmail?: string | null;
+  ownerName?: string | null;
   task?: TaskWithContext;
   error?: string;
   submitLabel: string;
@@ -28,7 +28,7 @@ export function TaskForm({
   action,
   companies,
   deals,
-  ownerEmail,
+  ownerName,
   task,
   error,
   submitLabel,
@@ -39,7 +39,7 @@ export function TaskForm({
         <CardTitle>{task ? "Task bearbeiten" : "Task erstellen"}</CardTitle>
         <CardDescription>
           Zuständig ist der angemeldete Nutzer
-          {ownerEmail ? ` (${ownerEmail})` : ""}.
+          {ownerName ? ` (${ownerName})` : ""}.
         </CardDescription>
       </CardHeader>
       <CardContent>

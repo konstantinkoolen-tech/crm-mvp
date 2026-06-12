@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function SettingsPage() {
-  redirect("/value-props");
+  redirect("/settings/users");
 }

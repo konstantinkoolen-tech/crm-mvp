@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { getCompanyClient } from "@/lib/db/companies";
-import { requireAdminProfile } from "@/lib/db/value-props";
+import { requireAdminProfile } from "@/lib/db/profiles";
 
 const VALUE_PROPS_PATH = "/value-props";
+const USERS_PATH = "/settings/users";
 
 function requiredText(value: FormDataEntryValue | null) {
   return String(value ?? "").trim();
@@ -22,19 +23,20 @@ function intFromForm(value: FormDataEntryValue | null) {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-function settingsRedirect(message: string): never {
-  redirect(`${VALUE_PROPS_PATH}?message=${encodeURIComponent(message)}`);
+function settingsRedirect(path: string, message: string): never {
+  redirect(`${path}?message=${encodeURIComponent(message)}`);
 }
 
-function settingsError(message: string): never {
-  redirect(`${VALUE_PROPS_PATH}?error=${encodeURIComponent(message)}`);
+function settingsError(path: string, message: string): never {
+  redirect(`${path}?error=${encodeURIComponent(message)}`);
 }
 
-async function ensureAdminOrRedirect() {
+async function ensureAdminOrRedirect(path = VALUE_PROPS_PATH) {
   try {
     await requireAdminProfile();
   } catch (error) {
     settingsError(
+      path,
       error instanceof Error
         ? error.message
         : "Nur Admins können diese Einstellung ändern.",
@@ -49,7 +51,7 @@ export async function createValueProp(formData: FormData) {
   const label = requiredText(formData.get("label"));
 
   if (!code || !label) {
-    settingsError("Code und Name der Value Prop sind Pflichtfelder.");
+    settingsError(VALUE_PROPS_PATH, "Code und Name der Value Prop sind Pflichtfelder.");
   }
 
   const { error } = await supabase.from("value_props").insert({
@@ -62,11 +64,11 @@ export async function createValueProp(formData: FormData) {
   });
 
   if (error) {
-    settingsError(error.message);
+    settingsError(VALUE_PROPS_PATH, error.message);
   }
 
   revalidateValueProps();
-  settingsRedirect("Value Prop wurde hinzugefuegt.");
+  settingsRedirect(VALUE_PROPS_PATH, "Value Prop wurde hinzugefügt.");
 }
 
 export async function updateValueProp(formData: FormData) {
@@ -77,7 +79,7 @@ export async function updateValueProp(formData: FormData) {
   const label = requiredText(formData.get("label"));
 
   if (!valuePropId || !code || !label) {
-    settingsError("Value Prop, Code und Name sind Pflichtfelder.");
+    settingsError(VALUE_PROPS_PATH, "Value Prop, Code und Name sind Pflichtfelder.");
   }
 
   const { error } = await supabase
@@ -92,11 +94,11 @@ export async function updateValueProp(formData: FormData) {
     .eq("id", valuePropId);
 
   if (error) {
-    settingsError(error.message);
+    settingsError(VALUE_PROPS_PATH, error.message);
   }
 
   revalidateValueProps();
-  settingsRedirect("Value Prop wurde aktualisiert.");
+  settingsRedirect(VALUE_PROPS_PATH, "Value Prop wurde aktualisiert.");
 }
 
 export async function updateValuePropStatus(formData: FormData) {
@@ -106,7 +108,7 @@ export async function updateValuePropStatus(formData: FormData) {
   const status = requiredText(formData.get("status")) === "archived" ? "archived" : "active";
 
   if (!valuePropId) {
-    settingsError("Value Prop fehlt.");
+    settingsError(VALUE_PROPS_PATH, "Value Prop fehlt.");
   }
 
   const { error } = await supabase
@@ -115,7 +117,7 @@ export async function updateValuePropStatus(formData: FormData) {
     .eq("id", valuePropId);
 
   if (error) {
-    settingsError(error.message);
+    settingsError(VALUE_PROPS_PATH, error.message);
   }
 
   revalidateValueProps();
@@ -129,7 +131,7 @@ export async function moveValueProp(formData: FormData) {
   const direction = requiredText(formData.get("direction"));
 
   if (!valuePropId || (direction !== "up" && direction !== "down")) {
-    settingsError("Reihenfolge konnte nicht geändert werden.");
+    settingsError(VALUE_PROPS_PATH, "Reihenfolge konnte nicht geändert werden.");
   }
 
   const { data, error } = await supabase
@@ -140,7 +142,7 @@ export async function moveValueProp(formData: FormData) {
     .order("code", { ascending: true });
 
   if (error) {
-    settingsError(error.message);
+    settingsError(VALUE_PROPS_PATH, error.message);
   }
 
   const currentIndex = (data ?? []).findIndex((valueProp) => valueProp.id === valuePropId);
@@ -158,7 +160,7 @@ export async function moveValueProp(formData: FormData) {
     .eq("id", current.id);
 
   if (currentError) {
-    settingsError(currentError.message);
+    settingsError(VALUE_PROPS_PATH, currentError.message);
   }
 
   const { error: targetError } = await supabase
@@ -167,7 +169,7 @@ export async function moveValueProp(formData: FormData) {
     .eq("id", target.id);
 
   if (targetError) {
-    settingsError(targetError.message);
+    settingsError(VALUE_PROPS_PATH, targetError.message);
   }
 
   revalidateValueProps();
@@ -180,7 +182,7 @@ export async function deleteValueProp(formData: FormData) {
   const valuePropId = requiredText(formData.get("value_prop_id"));
 
   if (!valuePropId) {
-    settingsError("Value Prop fehlt.");
+    settingsError(VALUE_PROPS_PATH, "Value Prop fehlt.");
   }
 
   const { error } = await supabase
@@ -189,19 +191,19 @@ export async function deleteValueProp(formData: FormData) {
     .eq("id", valuePropId);
 
   if (error) {
-    settingsError(error.message);
+    settingsError(VALUE_PROPS_PATH, error.message);
   }
 
   revalidateValueProps();
-  settingsRedirect("Value Prop wurde gelöscht.");
+  settingsRedirect(VALUE_PROPS_PATH, "Value Prop wurde gelöscht.");
 }
 
 export async function inviteUser(formData: FormData) {
-  await ensureAdminOrRedirect();
+  await ensureAdminOrRedirect(USERS_PATH);
   const email = requiredText(formData.get("email"));
 
   if (!email) {
-    settingsError("Bitte gib eine E-Mail für die Einladung ein.");
+    settingsError(USERS_PATH, "Bitte gib eine E-Mail für die Einladung ein.");
   }
 
   let admin: ReturnType<typeof getAdminClient>;
@@ -209,6 +211,7 @@ export async function inviteUser(formData: FormData) {
     admin = getAdminClient();
   } catch (error) {
     settingsError(
+      USERS_PATH,
       error instanceof Error
         ? error.message
         : "Einladung ist noch nicht aktiviert.",
@@ -218,28 +221,62 @@ export async function inviteUser(formData: FormData) {
   const { error } = await admin.auth.admin.inviteUserByEmail(email);
 
   if (error) {
-    settingsError(error.message);
+    settingsError(USERS_PATH, error.message);
   }
 
-  settingsRedirect("Einladung wurde versendet.");
+  settingsRedirect(USERS_PATH, "Einladung wurde versendet.");
 }
 
 export async function sendPasswordRecovery(formData: FormData) {
-  await ensureAdminOrRedirect();
+  await ensureAdminOrRedirect(USERS_PATH);
   const email = requiredText(formData.get("email"));
 
   if (!email) {
-    settingsError("Bitte gib eine E-Mail für den Passwort-Reset ein.");
+    settingsError(USERS_PATH, "Bitte gib eine E-Mail für den Passwort-Reset ein.");
   }
 
   const { supabase } = await getCompanyClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email);
 
   if (error) {
-    settingsError(error.message);
+    settingsError(USERS_PATH, error.message);
   }
 
-  settingsRedirect("Passwort-Reset wurde versendet.");
+  settingsRedirect(USERS_PATH, "Passwort-Reset wurde versendet.");
+}
+
+export async function updateUserProfile(formData: FormData) {
+  await ensureAdminOrRedirect(USERS_PATH);
+  const { supabase } = await getCompanyClient();
+  const profileId = requiredText(formData.get("profile_id"));
+  const displayName = requiredText(formData.get("display_name"));
+  const role = requiredText(formData.get("role")) === "admin" ? "admin" : "member";
+  const status = requiredText(formData.get("status")) === "inactive" ? "inactive" : "active";
+
+  if (!profileId || !displayName) {
+    settingsError(USERS_PATH, "Profil und Anzeigename sind Pflichtfelder.");
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      display_name: displayName,
+      role,
+      status,
+      can_create_deals: formData.get("can_create_deals") === "on",
+      can_create_companies: formData.get("can_create_companies") === "on",
+      can_delete_companies: formData.get("can_delete_companies") === "on",
+      can_manage_users: formData.get("can_manage_users") === "on",
+      can_manage_settings: formData.get("can_manage_settings") === "on",
+    })
+    .eq("id", profileId);
+
+  if (error) {
+    settingsError(USERS_PATH, error.message);
+  }
+
+  revalidatePath(USERS_PATH);
+  settingsRedirect(USERS_PATH, "User wurde aktualisiert.");
 }
 
 function getAdminClient() {

@@ -21,11 +21,11 @@ import {
 import type { TaskWithContext } from "@/lib/db/tasks";
 
 type TaskListProps = {
-  ownerEmail?: string | null;
+  ownerName?: string | null;
   tasks: TaskWithContext[];
 };
 
-export function TaskList({ ownerEmail, tasks }: TaskListProps) {
+export function TaskList({ ownerName, tasks }: TaskListProps) {
   if (tasks.length === 0) {
     return (
       <Card>
@@ -82,7 +82,7 @@ export function TaskList({ ownerEmail, tasks }: TaskListProps) {
                 <TableCell>
                   <TaskContext task={task} />
                 </TableCell>
-                <TableCell>{ownerEmail ?? "Aktueller Nutzer"}</TableCell>
+                <TableCell>{ownerName ?? "Aktueller Nutzer"}</TableCell>
                 <TableCell>
                   {task.due_date ? (
                     <span className="inline-flex items-center gap-1.5">
