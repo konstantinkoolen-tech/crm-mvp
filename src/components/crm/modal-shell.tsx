@@ -23,7 +23,12 @@ export function ModalShell({
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
-      onClick={onClose}
+      onKeyDown={(event) => event.stopPropagation()}
+      onKeyUp={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClose();
+      }}
     >
       <div
         className="mx-auto w-full max-w-2xl rounded-lg border border-neutral-200 bg-white p-5 shadow-xl"
@@ -36,7 +41,10 @@ export function ModalShell({
                 {eyebrow}
               </p>
             ) : null}
-            <h2 id="modal-title" className="mt-1 text-lg font-semibold text-neutral-950">
+            <h2
+              id="modal-title"
+              className="mt-1 text-lg font-semibold text-neutral-950"
+            >
               {title}
             </h2>
           </div>
@@ -45,7 +53,7 @@ export function ModalShell({
             variant="ghost"
             size="icon"
             className="size-8"
-            aria-label="Dialog schliessen"
+            aria-label="Dialog schließen"
             onClick={onClose}
           >
             <X aria-hidden="true" />

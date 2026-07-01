@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { TaskOwnerSelect } from "@/components/crm/task-owner-select";
 import {
   Card,
   CardContent,
@@ -12,13 +14,21 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Company } from "@/lib/db/companies";
 import type { DealWithCompany } from "@/lib/db/deals";
-import { taskStatusLabels, taskStatuses, type TaskWithContext } from "@/lib/db/tasks";
+import type { TeamProfile } from "@/lib/db/profiles";
+import type { TaskWithContext } from "@/lib/db/tasks";
+import { taskStatusLabels, taskStatuses } from "@/lib/tasks/constants";
+import {
+  TASK_DESCRIPTION_MAX_LENGTH,
+  TASK_TITLE_MAX_LENGTH,
+} from "@/lib/tasks/limits";
 
 type TaskFormProps = {
   action: (formData: FormData) => Promise<void>;
   companies: Company[];
   deals: DealWithCompany[];
+  defaultOwnerId?: string | null;
   ownerName?: string | null;
+  profiles: TeamProfile[];
   task?: TaskWithContext;
   error?: string;
   submitLabel: string;
@@ -28,7 +38,9 @@ export function TaskForm({
   action,
   companies,
   deals,
+  defaultOwnerId,
   ownerName,
+  profiles,
   task,
   error,
   submitLabel,
@@ -59,6 +71,7 @@ export function TaskForm({
                 id="title"
                 name="title"
                 required
+                maxLength={TASK_TITLE_MAX_LENGTH}
                 defaultValue={task?.title ?? ""}
                 placeholder="Follow-up senden"
               />
@@ -90,6 +103,12 @@ export function TaskForm({
                 ))}
               </select>
             </div>
+
+            <TaskOwnerSelect
+              id="owner_id"
+              defaultOwnerId={task?.owner_id ?? defaultOwnerId}
+              profiles={profiles}
+            />
 
             <div className="space-y-2">
               <Label htmlFor="company_id">Unternehmen</Label>
@@ -130,6 +149,8 @@ export function TaskForm({
               <Textarea
                 id="description"
                 name="description"
+                maxLength={TASK_DESCRIPTION_MAX_LENGTH}
+                rows={6}
                 defaultValue={task?.description ?? ""}
                 placeholder="Kontext oder nächster Schritt"
               />

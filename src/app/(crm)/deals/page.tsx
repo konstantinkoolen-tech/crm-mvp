@@ -44,6 +44,7 @@ async function DealsPipeline({
 
   return (
     <DealKanban
+      companies={companies}
       deals={deals}
       emptyAction={<DealCreateModalButton companies={companies} label="Deal erstellen" />}
     />

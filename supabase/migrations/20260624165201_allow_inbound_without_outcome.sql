@@ -1,0 +1,37 @@
+alter table public.activities
+drop constraint if exists activities_outreach_fields_check;
+
+alter table public.activities
+add constraint activities_outreach_fields_check
+check (
+  (
+    direction = 'inbound'
+    and outreach_kind is null
+  )
+  or (
+    direction = 'outbound'
+    and (
+      (
+        outreach_kind is null
+        and outreach_outcome is null
+        and value_prop_id is null
+        and pain_statement = 'no_statement'
+      )
+      or (
+        outreach_kind is not null
+        and value_prop_id is not null
+        and (
+          (
+            type in ('call', 'meeting')
+            and outreach_outcome is not null
+          )
+          or (
+            type not in ('call', 'meeting')
+            and outreach_outcome is null
+            and pain_statement = 'no_statement'
+          )
+        )
+      )
+    )
+  )
+);

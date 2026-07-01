@@ -2,8 +2,16 @@ import { updateTask } from "@/app/(crm)/tasks/actions";
 import { TaskForm } from "@/components/crm/task-form";
 import { listCompanies } from "@/lib/db/companies";
 import { listDeals } from "@/lib/db/deals";
-import { displayNameForProfile, getCurrentProfile } from "@/lib/db/profiles";
+import {
+  displayNameForProfile,
+  getCurrentProfile,
+  listTeamProfiles,
+} from "@/lib/db/profiles";
 import { getTask } from "@/lib/db/tasks";
+import {
+  TASK_DESCRIPTION_MAX_LENGTH,
+  TASK_TITLE_MAX_LENGTH,
+} from "@/lib/tasks/limits";
 
 type EditTaskPageProps = {
   params: Promise<{
@@ -18,13 +26,15 @@ export default async function EditTaskPage({
   params,
   searchParams,
 }: EditTaskPageProps) {
-  const [{ taskId }, { error }, companies, deals, profile] = await Promise.all([
-    params,
-    searchParams,
-    listCompanies(),
-    listDeals(),
-    getCurrentProfile(),
-  ]);
+  const [{ taskId }, { error }, companies, deals, profile, profiles] =
+    await Promise.all([
+      params,
+      searchParams,
+      listCompanies(),
+      listDeals(),
+      getCurrentProfile(),
+      listTeamProfiles(),
+    ]);
   const task = await getTask(taskId);
 
   return (
@@ -39,7 +49,9 @@ export default async function EditTaskPage({
         action={updateTask}
         companies={companies}
         deals={deals}
+        defaultOwnerId={task.owner_id}
         ownerName={displayNameForProfile(profile)}
+        profiles={profiles}
         task={task}
         error={errorMessage(error)}
         submitLabel="Speichern"
@@ -59,6 +71,14 @@ function errorMessage(error?: string) {
 
   if (error === "missing_due_date") {
     return "Bitte wähle ein Fälligkeitsdatum.";
+  }
+
+  if (error === "title_too_long") {
+    return `Der Task-Titel darf maximal ${TASK_TITLE_MAX_LENGTH} Zeichen lang sein.`;
+  }
+
+  if (error === "description_too_long") {
+    return `Die Task-Beschreibung darf maximal ${TASK_DESCRIPTION_MAX_LENGTH} Zeichen lang sein.`;
   }
 
   return decodeURIComponent(error);

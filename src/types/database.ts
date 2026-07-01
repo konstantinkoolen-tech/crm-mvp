@@ -16,11 +16,21 @@ export type DealStage =
 
 export type ProfileStatus = "active" | "inactive";
 
-export type CompanyStatus = "active" | "inactive" | "archived";
+export type CompanyStatus =
+  | "new"
+  | "contacted"
+  | "in_exchange"
+  | "active_customer"
+  | "lost_customer"
+  | "churn";
+
+export type CompanyEmployeeCount = "1-5" | "6-10" | "11-20" | "21-50" | "50+";
 
 export type ContactStatus = "active" | "inactive" | "archived";
 
-export type DealStatus = "open" | "won" | "lost" | "archived";
+export type DealStatus = "open" | "won" | "lost" | "churn";
+
+export type DealValuePeriod = "mrr" | "arr";
 
 export type ActivityType =
   | "note"
@@ -31,6 +41,8 @@ export type ActivityType =
   | "task_update";
 
 export type ActivityStatus = "planned" | "completed" | "canceled";
+
+export type ActivityDirection = "outbound" | "inbound";
 
 export type TaskStatus = "open" | "in_progress" | "done" | "canceled";
 

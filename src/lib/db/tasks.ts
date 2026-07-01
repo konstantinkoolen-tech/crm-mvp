@@ -1,20 +1,9 @@
 import { notFound } from "next/navigation";
-import { getCompanyClient } from "@/lib/db/companies";
+import { getCompanyClient, type ListOwner } from "@/lib/db/companies";
+import { isTaskOverdue, taskStatusLabels, taskStatuses } from "@/lib/tasks/constants";
 import type { TaskStatus } from "@/types/database";
 
-export const taskStatuses = [
-  "open",
-  "in_progress",
-  "done",
-  "canceled",
-] as const satisfies readonly TaskStatus[];
-
-export const taskStatusLabels: Record<TaskStatus, string> = {
-  open: "Offen",
-  in_progress: "In Arbeit",
-  done: "Erledigt",
-  canceled: "Abgebrochen",
-};
+export { isTaskOverdue, taskStatusLabels, taskStatuses };
 
 export type Task = {
   id: string;
@@ -40,41 +29,20 @@ export type TaskWithContext = Task & {
     id: string;
     title: string;
   } | null;
+  owner: ListOwner | null;
 };
 
 const taskSelect =
   "id, owner_id, company_id, contact_id, deal_id, title, description, status, due_date, completed_at, created_at, updated_at";
-
-export function todayDateString() {
-  const parts = new Intl.DateTimeFormat("en", {
-    timeZone: "Europe/Berlin",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-
-  const year = parts.find((part) => part.type === "year")?.value;
-  const month = parts.find((part) => part.type === "month")?.value;
-  const day = parts.find((part) => part.type === "day")?.value;
-
-  return `${year}-${month}-${day}`;
-}
-
-export function isTaskOverdue(task: Pick<Task, "due_date" | "status">) {
-  return (
-    Boolean(task.due_date) &&
-    task.due_date! < todayDateString() &&
-    task.status !== "done" &&
-    task.status !== "canceled"
-  );
-}
 
 export async function listTasks() {
   const { supabase } = await getCompanyClient();
 
   const { data, error } = await supabase
     .from("tasks")
-    .select(`${taskSelect}, company:companies(id, name), deal:deals(id, title)`)
+    .select(
+      `${taskSelect}, company:companies(id, name), deal:deals(id, title), owner:profiles!tasks_owner_id_fkey(id, email, full_name, display_name)`,
+    )
     .order("due_date", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
 
@@ -90,7 +58,9 @@ export async function listOpenTasks() {
 
   const { data, error } = await supabase
     .from("tasks")
-    .select(`${taskSelect}, company:companies(id, name), deal:deals(id, title)`)
+    .select(
+      `${taskSelect}, company:companies(id, name), deal:deals(id, title), owner:profiles!tasks_owner_id_fkey(id, email, full_name, display_name)`,
+    )
     .in("status", ["open", "in_progress"])
     .order("due_date", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
@@ -107,7 +77,9 @@ export async function listTasksForCompany(companyId: string) {
 
   const { data, error } = await supabase
     .from("tasks")
-    .select(`${taskSelect}, company:companies(id, name), deal:deals(id, title)`)
+    .select(
+      `${taskSelect}, company:companies(id, name), deal:deals(id, title), owner:profiles!tasks_owner_id_fkey(id, email, full_name, display_name)`,
+    )
     .eq("company_id", companyId)
     .order("due_date", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
@@ -129,7 +101,9 @@ export async function getTask(taskId: string) {
 
   const { data, error } = await supabase
     .from("tasks")
-    .select(`${taskSelect}, company:companies(id, name), deal:deals(id, title)`)
+    .select(
+      `${taskSelect}, company:companies(id, name), deal:deals(id, title), owner:profiles!tasks_owner_id_fkey(id, email, full_name, display_name)`,
+    )
     .eq("id", taskId)
     .maybeSingle();
 

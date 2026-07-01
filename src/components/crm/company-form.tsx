@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import {
   Card,
   CardContent,
@@ -10,32 +13,51 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { TaskOwnerSelect } from "@/components/crm/task-owner-select";
+import {
+  employeeCountFromValue,
+  employeeCountOptions,
+} from "@/lib/companies/employee-count";
 import type { Company } from "@/lib/db/companies";
+import type { TeamProfile } from "@/lib/db/profiles";
 
 type CompanyFormProps = {
   action: (formData: FormData) => Promise<void>;
   company?: Company;
+  currentProfileId?: string;
   error?: string;
+  onCancel?: () => void;
+  presentation?: "page" | "modal";
+  profiles?: TeamProfile[];
   submitLabel: string;
 };
 
 export function CompanyForm({
   action,
   company,
+  currentProfileId,
   error,
+  onCancel,
+  presentation = "page",
+  profiles = [],
   submitLabel,
 }: CompanyFormProps) {
+  const isModal = presentation === "modal";
+  const defaultOwnerId = company?.owner_id ?? currentProfileId;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {company ? "Unternehmen bearbeiten" : "Unternehmen erstellen"}
-        </CardTitle>
-        <CardDescription>
-          Pflege die Basisdaten für Account Management und Pipeline-Arbeit.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Card className={isModal ? "border-0 shadow-none" : undefined}>
+      {!isModal ? (
+        <CardHeader>
+          <CardTitle>
+            {company ? "Unternehmen bearbeiten" : "Unternehmen erstellen"}
+          </CardTitle>
+          <CardDescription>
+            Pflege die Basisdaten für Account Management und Pipeline-Arbeit.
+          </CardDescription>
+        </CardHeader>
+      ) : null}
+      <CardContent className={isModal ? "p-0" : undefined}>
         {error ? (
           <div className="mb-5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
@@ -69,6 +91,28 @@ export function CompanyForm({
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="phone">Telefon</Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                defaultValue={company?.phone ?? ""}
+                placeholder="+49 30 12345678"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="company_email">Company-E-Mail</Label>
+              <Input
+                id="company_email"
+                name="company_email"
+                defaultValue={company?.company_email ?? ""}
+                placeholder="info@example.com"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="industry">Branche</Label>
               <Input
                 id="industry"
@@ -80,29 +124,29 @@ export function CompanyForm({
 
             <div className="space-y-2">
               <Label htmlFor="employee_count">Mitarbeiter</Label>
-              <Input
+              <select
                 id="employee_count"
                 name="employee_count"
-                type="number"
-                min="0"
-                defaultValue={company?.employee_count ?? ""}
-                placeholder="120"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <select
-                id="status"
-                name="status"
-                defaultValue={company?.status ?? "active"}
+                defaultValue={employeeCountFromValue(company?.employee_count) ?? ""}
                 className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
               >
-                <option value="active">Aktiv</option>
-                <option value="inactive">Inaktiv</option>
-                <option value="archived">Archiviert</option>
+                <option value="">Auswählen</option>
+                {employeeCountOptions.map((option) => (
+                  <option value={option} key={option}>
+                    {option}
+                  </option>
+                ))}
               </select>
             </div>
+
+            {profiles.length > 0 ? (
+              <TaskOwnerSelect
+                id={`company-owner-${company?.id ?? "new"}`}
+                label="Zuständiger Mitarbeiter"
+                defaultOwnerId={defaultOwnerId}
+                profiles={profiles}
+              />
+            ) : null}
 
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="notes">Notizen</Label>
@@ -116,12 +160,18 @@ export function CompanyForm({
           </div>
 
           <div className="flex items-center justify-end gap-3">
-            <Link
-              href={company ? `/companies/${company.id}` : "/companies"}
-              className={buttonVariants({ variant: "outline" })}
-            >
-              Abbrechen
-            </Link>
+            {isModal ? (
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Abbrechen
+              </Button>
+            ) : (
+              <Link
+                href={company ? `/companies/${company.id}` : "/companies"}
+                className={buttonVariants({ variant: "outline" })}
+              >
+                Abbrechen
+              </Link>
+            )}
             <Button type="submit">{submitLabel}</Button>
           </div>
         </form>

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { login } from "@/app/(auth)/login/actions";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 
 type LoginPageProps = {
@@ -11,7 +12,7 @@ type LoginPageProps = {
 
 const errorMessages: Record<string, string> = {
   invalid_credentials: "E-Mail oder Passwort ist nicht korrekt.",
-  missing_fields: "Bitte E-Mail und Passwort ausfuellen.",
+  missing_fields: "Bitte E-Mail und Passwort ausfüllen.",
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -93,12 +94,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 />
               </label>
 
-              <button
+              <Button
                 type="submit"
-                className="h-10 w-full rounded-md bg-neutral-950 px-4 text-sm font-medium text-white transition hover:bg-neutral-800"
+                className="w-full"
               >
                 Einloggen
-              </button>
+              </Button>
             </form>
           </div>
         </div>

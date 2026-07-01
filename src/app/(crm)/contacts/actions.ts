@@ -23,9 +23,8 @@ function statusFromForm(value: FormDataEntryValue | null): ContactStatus {
     : "active";
 }
 
-function contactPayload(formData: FormData, ownerId: string) {
+function contactFields(formData: FormData) {
   return {
-    owner_id: ownerId,
     company_id: requiredText(formData.get("company_id")),
     first_name: requiredText(formData.get("first_name")),
     last_name: requiredText(formData.get("last_name")),
@@ -40,7 +39,7 @@ function contactPayload(formData: FormData, ownerId: string) {
 
 export async function createContact(formData: FormData) {
   const { supabase, user } = await getCompanyClient();
-  const payload = contactPayload(formData, user.id);
+  const payload = { ...contactFields(formData), owner_id: user.id };
 
   if (!payload.company_id) {
     redirect("/companies?error=missing_company");
@@ -67,8 +66,8 @@ export async function createContact(formData: FormData) {
 
 export async function updateContact(formData: FormData) {
   const contactId = requiredText(formData.get("contact_id"));
-  const { supabase, user } = await getCompanyClient();
-  const payload = contactPayload(formData, user.id);
+  const { supabase } = await getCompanyClient();
+  const payload = contactFields(formData);
 
   if (!contactId) {
     redirect("/contacts?error=missing_contact");

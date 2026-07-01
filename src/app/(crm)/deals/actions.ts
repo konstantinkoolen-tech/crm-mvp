@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCompanyClient } from "@/lib/db/companies";
-import { dealStages } from "@/lib/db/deals";
+import {
+  dealStatusForStage,
+  dealStatuses,
+  dealStages,
+  dealValuePeriodFromForm,
+} from "@/lib/deals/constants";
 import type { DealStage, DealStatus } from "@/types/database";
 
 function nullableText(value: FormDataEntryValue | null) {
@@ -39,44 +44,49 @@ function nullableInteger(value: FormDataEntryValue | null) {
 
 function stageFromForm(value: FormDataEntryValue | null): DealStage {
   const stage = String(value ?? "lead");
-  return dealStages.includes(stage as DealStage) ? (stage as DealStage) : "lead";
+  return dealStages.includes(stage as DealStage)
+    ? (stage as DealStage)
+    : "lead";
 }
 
-function statusForStage(stage: DealStage): DealStatus {
-  if (stage === "won") {
-    return "won";
-  }
+function statusFromForm(
+  value: FormDataEntryValue | null,
+  stage: DealStage,
+): DealStatus {
+  const status = String(value ?? "");
 
-  if (stage === "lost") {
-    return "lost";
-  }
-
-  return "open";
+  return dealStatuses.includes(status as DealStatus)
+    ? (status as DealStatus)
+    : dealStatusForStage(stage);
 }
 
-function dealPayload(formData: FormData, ownerId: string) {
+function closedAtForStatus(status: DealStatus) {
+  return status === "open" ? null : new Date().toISOString();
+}
+
+function dealFields(formData: FormData) {
   const stage = stageFromForm(formData.get("stage"));
+  const status = statusFromForm(formData.get("status"), stage);
 
   return {
-    owner_id: ownerId,
     company_id: requiredText(formData.get("company_id")),
     title: requiredText(formData.get("title")),
     stage,
-    status: statusForStage(stage),
+    status,
     value_amount: nullableNumber(formData.get("value_amount")),
     value_currency: requiredText(formData.get("value_currency")) || "EUR",
+    value_period: dealValuePeriodFromForm(formData.get("value_period")),
     probability: nullableInteger(formData.get("probability")),
     expected_close_date: nullableText(formData.get("expected_close_date")),
     description: nullableText(formData.get("description")),
-    closed_at:
-      stage === "won" || stage === "lost" ? new Date().toISOString() : null,
+    closed_at: closedAtForStatus(status),
   };
 }
 
 export async function createDeal(formData: FormData) {
   const returnTo = requiredText(formData.get("return_to"));
   const { supabase, user } = await getCompanyClient();
-  const payload = dealPayload(formData, user.id);
+  const payload = { ...dealFields(formData), owner_id: user.id };
   const errorTo = returnTo || "/deals/new";
   const successTo = returnTo || "/deals";
 
@@ -95,14 +105,15 @@ export async function createDeal(formData: FormData) {
   }
 
   revalidatePath("/deals");
+  revalidatePath("/companies");
   revalidatePath(`/companies/${payload.company_id}`);
   redirect(successTo);
 }
 
 export async function updateDeal(formData: FormData) {
   const dealId = requiredText(formData.get("deal_id"));
-  const { supabase, user } = await getCompanyClient();
-  const payload = dealPayload(formData, user.id);
+  const { supabase } = await getCompanyClient();
+  const payload = dealFields(formData);
 
   if (!dealId) {
     redirect("/deals?error=missing_deal");
@@ -112,13 +123,19 @@ export async function updateDeal(formData: FormData) {
     redirect(`/deals/${dealId}/edit?error=missing_title`);
   }
 
-  const { error } = await supabase.from("deals").update(payload).eq("id", dealId);
+  const { error } = await supabase
+    .from("deals")
+    .update(payload)
+    .eq("id", dealId);
 
   if (error) {
-    redirect(`/deals/${dealId}/edit?error=${encodeURIComponent(error.message)}`);
+    redirect(
+      `/deals/${dealId}/edit?error=${encodeURIComponent(error.message)}`,
+    );
   }
 
   revalidatePath("/deals");
+  revalidatePath("/companies");
   revalidatePath(`/companies/${payload.company_id}`);
   redirect("/deals");
 }
@@ -133,13 +150,13 @@ export async function updateDealStage(formData: FormData) {
   }
 
   const { supabase } = await getCompanyClient();
+  const status = dealStatusForStage(stage);
   const { error } = await supabase
     .from("deals")
     .update({
       stage,
-      status: statusForStage(stage),
-      closed_at:
-        stage === "won" || stage === "lost" ? new Date().toISOString() : null,
+      status,
+      closed_at: closedAtForStatus(status),
     })
     .eq("id", dealId);
 
@@ -148,9 +165,45 @@ export async function updateDealStage(formData: FormData) {
   }
 
   revalidatePath("/deals");
+  revalidatePath("/companies");
   if (companyId) {
     revalidatePath(`/companies/${companyId}`);
   }
+}
+
+export async function moveDealToStage(
+  dealId: string,
+  companyId: string,
+  nextStage: DealStage,
+) {
+  const stage = stageFromForm(nextStage);
+  const status = dealStatusForStage(stage);
+
+  if (!dealId) {
+    return { ok: false, message: "Deal fehlt." };
+  }
+
+  const { supabase } = await getCompanyClient();
+  const { error } = await supabase
+    .from("deals")
+    .update({
+      stage,
+      status,
+      closed_at: closedAtForStatus(status),
+    })
+    .eq("id", dealId);
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  revalidatePath("/deals");
+  revalidatePath("/companies");
+  if (companyId) {
+    revalidatePath(`/companies/${companyId}`);
+  }
+
+  return { ok: true };
 }
 
 export async function deleteDeal(formData: FormData) {
@@ -169,6 +222,7 @@ export async function deleteDeal(formData: FormData) {
   }
 
   revalidatePath("/deals");
+  revalidatePath("/companies");
   if (companyId) {
     revalidatePath(`/companies/${companyId}`);
   }

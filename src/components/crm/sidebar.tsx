@@ -51,10 +51,11 @@ const navigation = [
 ];
 
 type SidebarProps = {
+  hasOverdueTasks?: boolean;
   userEmail?: string | null;
 };
 
-export function Sidebar({ userEmail }: SidebarProps) {
+export function Sidebar({ hasOverdueTasks = false, userEmail }: SidebarProps) {
   return (
     <aside className="hidden h-dvh w-64 shrink-0 border-r border-neutral-200 bg-white lg:flex lg:flex-col">
       <div className="border-b border-neutral-200 px-5 py-4">
@@ -68,6 +69,7 @@ export function Sidebar({ userEmail }: SidebarProps) {
       <nav className="flex-1 space-y-1 px-3 py-4" aria-label="Hauptnavigation">
         {navigation.map((item) => {
           const Icon = item.icon;
+          const showTaskAlert = item.href === "/tasks" && hasOverdueTasks;
 
           return (
             <Link
@@ -79,7 +81,14 @@ export function Sidebar({ userEmail }: SidebarProps) {
               )}
             >
               <Icon className="size-4" aria-hidden="true" />
-              {item.label}
+              <span>{item.label}</span>
+              {showTaskAlert ? (
+                <span
+                  className="ml-auto size-2.5 rounded-full bg-red-600"
+                  aria-label="Es gibt fällige oder überfällige Tasks"
+                  role="status"
+                />
+              ) : null}
             </Link>
           );
         })}

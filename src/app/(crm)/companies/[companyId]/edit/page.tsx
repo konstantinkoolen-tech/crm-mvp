@@ -1,6 +1,7 @@
 import { updateCompany } from "@/app/(crm)/companies/actions";
 import { CompanyForm } from "@/components/crm/company-form";
 import { getCompany } from "@/lib/db/companies";
+import { listTeamProfiles } from "@/lib/db/profiles";
 
 type EditCompanyPageProps = {
   params: Promise<{
@@ -16,7 +17,10 @@ export default async function EditCompanyPage({
   searchParams,
 }: EditCompanyPageProps) {
   const [{ companyId }, { error }] = await Promise.all([params, searchParams]);
-  const company = await getCompany(companyId);
+  const [company, teamProfiles] = await Promise.all([
+    getCompany(companyId),
+    listTeamProfiles(),
+  ]);
 
   return (
     <section className="mx-auto max-w-3xl space-y-6">
@@ -32,6 +36,7 @@ export default async function EditCompanyPage({
         action={updateCompany}
         company={company}
         error={errorMessage(error)}
+        profiles={teamProfiles}
         submitLabel="Speichern"
       />
     </section>

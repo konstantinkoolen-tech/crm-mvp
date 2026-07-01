@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import {
   Card,
   CardContent,
@@ -10,15 +13,24 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { dealStageLabels, dealStages, type DealWithCompany } from "@/lib/db/deals";
 import type { Company } from "@/lib/db/companies";
+import type { Deal } from "@/lib/db/deals";
+import { DealValuePeriodToggle } from "@/components/crm/deal-value-period-toggle";
+import {
+  dealStageLabels,
+  dealStages,
+  dealStatusLabels,
+  dealStatuses,
+} from "@/lib/deals/constants";
 
 type DealFormProps = {
   action: (formData: FormData) => Promise<void>;
   companies: Company[];
   defaultCompanyId?: string;
-  deal?: DealWithCompany;
+  deal?: Deal;
   error?: string;
+  onCancel?: () => void;
+  presentation?: "page" | "modal";
   submitLabel: string;
 };
 
@@ -28,18 +40,24 @@ export function DealForm({
   defaultCompanyId,
   deal,
   error,
+  onCancel,
+  presentation = "page",
   submitLabel,
 }: DealFormProps) {
+  const isModal = presentation === "modal";
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{deal ? "Deal bearbeiten" : "Deal erstellen"}</CardTitle>
-        <CardDescription>
-          Jeder Deal wird einem Unternehmen zugeordnet und einer Pipeline-Stufe
-          zugewiesen.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Card className={isModal ? "border-0 shadow-none" : undefined}>
+      {!isModal ? (
+        <CardHeader>
+          <CardTitle>{deal ? "Deal bearbeiten" : "Deal erstellen"}</CardTitle>
+          <CardDescription>
+            Jeder Deal wird einem Unternehmen zugeordnet und einer
+            Pipeline-Stufe zugewiesen.
+          </CardDescription>
+        </CardHeader>
+      ) : null}
+      <CardContent className={isModal ? "p-0" : undefined}>
         {error ? (
           <div className="mb-5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
@@ -52,7 +70,9 @@ export function DealForm({
           </div>
         ) : (
           <form action={action} className="space-y-5">
-            {deal ? <input type="hidden" name="deal_id" value={deal.id} /> : null}
+            {deal ? (
+              <input type="hidden" name="deal_id" value={deal.id} />
+            ) : null}
 
             <div className="grid gap-5 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">
@@ -103,6 +123,22 @@ export function DealForm({
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  name="status"
+                  defaultValue={deal?.status ?? "open"}
+                  className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
+                >
+                  {dealStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {dealStatusLabels[status]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="value_amount">Wert</Label>
                 <Input
                   id="value_amount"
@@ -114,6 +150,11 @@ export function DealForm({
                   placeholder="25000"
                 />
               </div>
+
+              <DealValuePeriodToggle
+                idPrefix="deal-value-period"
+                defaultValue={deal?.value_period ?? "mrr"}
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="value_currency">Währung</Label>
@@ -139,7 +180,9 @@ export function DealForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="expected_close_date">Erwarteter Abschluss</Label>
+                <Label htmlFor="expected_close_date">
+                  Erwarteter Abschluss
+                </Label>
                 <Input
                   id="expected_close_date"
                   name="expected_close_date"
@@ -160,9 +203,18 @@ export function DealForm({
             </div>
 
             <div className="flex items-center justify-end gap-3">
-              <Link href="/deals" className={buttonVariants({ variant: "outline" })}>
-                Abbrechen
-              </Link>
+              {isModal ? (
+                <Button type="button" variant="outline" onClick={onCancel}>
+                  Abbrechen
+                </Button>
+              ) : (
+                <Link
+                  href="/deals"
+                  className={buttonVariants({ variant: "outline" })}
+                >
+                  Abbrechen
+                </Link>
+              )}
               <Button type="submit">{submitLabel}</Button>
             </div>
           </form>

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getCompanyClient } from "@/lib/db/companies";
+import { getCompanyClient, type ListOwner } from "@/lib/db/companies";
 import type { ContactStatus } from "@/types/database";
 
 export type Contact = {
@@ -23,6 +23,7 @@ export type ContactWithCompany = Contact & {
     id: string;
     name: string;
   } | null;
+  owner: ListOwner | null;
 };
 
 const contactSelect =
@@ -50,7 +51,9 @@ export async function listContacts() {
 
   const { data, error } = await supabase
     .from("contacts")
-    .select(`${contactSelect}, company:companies(id, name)`)
+    .select(
+      `${contactSelect}, company:companies(id, name), owner:profiles!contacts_owner_id_fkey(id, email, full_name, display_name)`,
+    )
     .order("updated_at", { ascending: false });
 
   if (error) {
@@ -65,7 +68,9 @@ export async function getContact(contactId: string) {
 
   const { data, error } = await supabase
     .from("contacts")
-    .select(`${contactSelect}, company:companies(id, name)`)
+    .select(
+      `${contactSelect}, company:companies(id, name), owner:profiles!contacts_owner_id_fkey(id, email, full_name, display_name)`,
+    )
     .eq("id", contactId)
     .maybeSingle();
 

@@ -1,11 +1,12 @@
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { CompanyActivityNotesPanel } from "@/components/crm/company-activity-notes-panel";
 import { CompanyContacts } from "@/components/crm/company-contacts";
 import { CompanyDeals } from "@/components/crm/company-deals";
 import { CompanyDeleteForm } from "@/components/crm/company-delete-form";
+import { CompanyEditModalButton } from "@/components/crm/company-edit-modal-button";
 import { CompanyStatusBadge } from "@/components/crm/company-status-badge";
-import { buttonVariants } from "@/components/ui/button";
+import { InlineCompanyNotes } from "@/components/crm/inline-company-notes";
 import {
   Card,
   CardContent,
@@ -13,12 +14,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getCompany } from "@/lib/db/companies";
+import { employeeCountFromValue } from "@/lib/companies/employee-count";
+import { getCompany, listCompanies } from "@/lib/db/companies";
 import { listActivitiesForCompany } from "@/lib/db/activities";
 import { listContactsForCompany } from "@/lib/db/contacts";
 import { listDealsForCompany } from "@/lib/db/deals";
+import { getCurrentProfile, listTeamProfiles } from "@/lib/db/profiles";
+import { ownerDisplayName } from "@/lib/list-display";
 import { listTasksForCompany } from "@/lib/db/tasks";
 import { listActiveValueProps } from "@/lib/db/value-props";
+import {
+  TASK_DESCRIPTION_MAX_LENGTH,
+  TASK_TITLE_MAX_LENGTH,
+} from "@/lib/tasks/limits";
 
 type CompanyDetailPageProps = {
   params: Promise<{
@@ -34,13 +42,26 @@ export default async function CompanyDetailPage({
   searchParams,
 }: CompanyDetailPageProps) {
   const [{ companyId }, { error }] = await Promise.all([params, searchParams]);
-  const [company, contacts, deals, activities, tasks, valueProps] = await Promise.all([
+  const [
+    company,
+    companies,
+    contacts,
+    deals,
+    activities,
+    tasks,
+    valueProps,
+    currentProfile,
+    teamProfiles,
+  ] = await Promise.all([
     getCompany(companyId),
+    listCompanies(),
     listContactsForCompany(companyId),
     listDealsForCompany(companyId),
     listActivitiesForCompany(companyId),
     listTasksForCompany(companyId),
     listActiveValueProps(),
+    getCurrentProfile(),
+    listTeamProfiles(),
   ]);
 
   return (
@@ -66,13 +87,7 @@ export default async function CompanyDetailPage({
         </div>
 
         <div className="flex gap-2">
-          <Link
-            href={`/companies/${company.id}/edit`}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            <Pencil aria-hidden="true" />
-            Bearbeiten
-          </Link>
+          <CompanyEditModalButton company={company} profiles={teamProfiles} />
           <CompanyDeleteForm companyId={company.id} />
         </div>
       </div>
@@ -83,7 +98,7 @@ export default async function CompanyDetailPage({
         </div>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
         <Card>
           <CardHeader>
             <CardTitle>Basisdaten</CardTitle>
@@ -92,16 +107,20 @@ export default async function CompanyDetailPage({
           <CardContent>
             <dl className="grid gap-4 sm:grid-cols-2">
               <DetailItem label="Website" value={company.website} />
+              <PhoneDetailItem value={company.phone} />
+              <DetailItem
+                label="Company-E-Mail"
+                value={company.company_email}
+              />
               <DetailItem label="Branche" value={company.industry} />
               <DetailItem
                 label="Mitarbeiter"
-                value={
-                  company.employee_count === null
-                    ? null
-                    : String(company.employee_count)
-                }
+                value={employeeCountFromValue(company.employee_count)}
               />
-              <DetailItem label="Status" value={company.status} />
+              <DetailItem
+                label="Zuständiger Mitarbeiter"
+                value={ownerDisplayName(company.owner)}
+              />
             </dl>
           </CardContent>
         </Card>
@@ -112,9 +131,10 @@ export default async function CompanyDetailPage({
             <CardDescription>Interner Kontext</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="whitespace-pre-wrap text-sm leading-6 text-neutral-700">
-              {company.notes ?? "Keine Notizen hinterlegt."}
-            </p>
+            <InlineCompanyNotes
+              companyId={company.id}
+              initialNotes={company.notes}
+            />
           </CardContent>
         </Card>
       </div>
@@ -124,14 +144,25 @@ export default async function CompanyDetailPage({
         companyName={company.name}
         contacts={contacts}
         activities={activities}
+        tasks={tasks}
         valueProps={valueProps}
+        currentProfileId={currentProfile.id}
+        teamProfiles={teamProfiles}
       />
-      <CompanyDeals companyId={company.id} deals={deals} />
+      <CompanyDeals
+        companyId={company.id}
+        companies={companies}
+        deals={deals}
+      />
       <CompanyActivityNotesPanel
         companyId={company.id}
+        companyName={company.name}
         contacts={contacts}
         tasks={tasks}
         activities={activities}
+        valueProps={valueProps}
+        currentProfileId={currentProfile.id}
+        teamProfiles={teamProfiles}
         error={errorMessage(error)}
       />
     </section>
@@ -143,6 +174,26 @@ function DetailItem({ label, value }: { label: string; value: string | null }) {
     <div>
       <dt className="text-sm font-medium text-neutral-500">{label}</dt>
       <dd className="mt-1 text-sm text-neutral-950">{value ?? "-"}</dd>
+    </div>
+  );
+}
+
+function PhoneDetailItem({ value }: { value: string | null }) {
+  return (
+    <div>
+      <dt className="text-sm font-medium text-neutral-500">Telefon</dt>
+      <dd className="mt-1 text-sm text-neutral-950">
+        {value ? (
+          <a
+            className="hover:underline"
+            href={`tel:${value.replace(/[^\d+]/g, "")}`}
+          >
+            {value}
+          </a>
+        ) : (
+          "-"
+        )}
+      </dd>
     </div>
   );
 }
@@ -173,7 +224,15 @@ function errorMessage(error?: string) {
   }
 
   if (error === "missing_outreach_fields") {
-    return "Bitte wähle für Outreach-Aktivitäten Outcome, Pain Aussage und Value Prop aus.";
+    return "Bitte fülle die erforderlichen Outreach-Felder aus.";
+  }
+
+  if (error === "title_too_long" || error === "task_title_too_long") {
+    return `Der Task-Titel darf maximal ${TASK_TITLE_MAX_LENGTH} Zeichen lang sein.`;
+  }
+
+  if (error === "description_too_long" || error === "task_description_too_long") {
+    return `Die Task-Beschreibung darf maximal ${TASK_DESCRIPTION_MAX_LENGTH} Zeichen lang sein.`;
   }
 
   return decodeURIComponent(error);

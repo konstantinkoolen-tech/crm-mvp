@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { getCompanyClient } from "@/lib/db/companies";
 import { requireAdminProfile } from "@/lib/db/profiles";
+import { getSiteUrl } from "@/lib/site-url";
 
 const VALUE_PROPS_PATH = "/value-props";
 const USERS_PATH = "/settings/users";
@@ -201,6 +202,7 @@ export async function deleteValueProp(formData: FormData) {
 export async function inviteUser(formData: FormData) {
   await ensureAdminOrRedirect(USERS_PATH);
   const email = requiredText(formData.get("email"));
+  const role = roleFromForm(formData.get("role"));
 
   if (!email) {
     settingsError(USERS_PATH, "Bitte gib eine E-Mail für die Einladung ein.");
@@ -218,13 +220,36 @@ export async function inviteUser(formData: FormData) {
     );
   }
 
-  const { error } = await admin.auth.admin.inviteUserByEmail(email);
+  const inviteUrl = `${getSiteUrl()}/invite?email=${encodeURIComponent(email.toLowerCase())}`;
+  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: inviteUrl,
+  });
 
   if (error) {
     settingsError(USERS_PATH, error.message);
   }
 
-  settingsRedirect(USERS_PATH, "Einladung wurde versendet.");
+  if (data.user?.id) {
+    const permissions = permissionsForRole(role);
+    const { error: profileError } = await admin.from("profiles").upsert({
+      id: data.user.id,
+      email,
+      display_name: email.split("@")[0],
+      role,
+      status: "active",
+      ...permissions,
+    });
+
+    if (profileError) {
+      settingsError(USERS_PATH, profileError.message);
+    }
+  }
+
+  revalidatePath(USERS_PATH);
+  settingsRedirect(
+    USERS_PATH,
+    `Einladung wurde versendet. Rolle: ${role === "admin" ? "Admin" : "Member"}.`,
+  );
 }
 
 export async function sendPasswordRecovery(formData: FormData) {
@@ -247,17 +272,46 @@ export async function sendPasswordRecovery(formData: FormData) {
 
 export async function updateUserProfile(formData: FormData) {
   await ensureAdminOrRedirect(USERS_PATH);
-  const { supabase } = await getCompanyClient();
+  const { user } = await getCompanyClient();
   const profileId = requiredText(formData.get("profile_id"));
   const displayName = requiredText(formData.get("display_name"));
-  const role = requiredText(formData.get("role")) === "admin" ? "admin" : "member";
+  const requestedRole =
+    requiredText(formData.get("role")) === "admin" ? "admin" : "member";
   const status = requiredText(formData.get("status")) === "inactive" ? "inactive" : "active";
 
   if (!profileId || !displayName) {
     settingsError(USERS_PATH, "Profil und Anzeigename sind Pflichtfelder.");
   }
 
-  const { error } = await supabase
+  if (profileId === user.id && status === "inactive") {
+    settingsError(USERS_PATH, "Du kannst deinen eigenen Admin-Zugang nicht deaktivieren.");
+  }
+
+  const admin = getAdminClient();
+  const { data: existingProfile, error: existingProfileError } = await admin
+    .from("profiles")
+    .select("status")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  if (existingProfileError) {
+    settingsError(USERS_PATH, existingProfileError.message);
+  }
+
+  if (!existingProfile) {
+    settingsError(USERS_PATH, "Der User wurde nicht gefunden.");
+  }
+
+  const role = profileId === user.id ? "admin" : requestedRole;
+  const { error: authError } = await admin.auth.admin.updateUserById(profileId, {
+    ban_duration: status === "inactive" ? "876000h" : "none",
+  });
+
+  if (authError) {
+    settingsError(USERS_PATH, authError.message);
+  }
+
+  const { error } = await admin
     .from("profiles")
     .update({
       display_name: displayName,
@@ -272,11 +326,102 @@ export async function updateUserProfile(formData: FormData) {
     .eq("id", profileId);
 
   if (error) {
+    await admin.auth.admin.updateUserById(profileId, {
+      ban_duration: existingProfile.status === "inactive" ? "876000h" : "none",
+    });
     settingsError(USERS_PATH, error.message);
   }
 
   revalidatePath(USERS_PATH);
-  settingsRedirect(USERS_PATH, "User wurde aktualisiert.");
+  settingsRedirect(
+    USERS_PATH,
+    status === "inactive"
+      ? "User wurde aktualisiert und deaktiviert."
+      : "User wurde aktualisiert und aktiviert.",
+  );
+}
+
+export async function deleteTeamUser(formData: FormData) {
+  await ensureAdminOrRedirect(USERS_PATH);
+  const { user } = await getCompanyClient();
+  const profileId = requiredText(formData.get("profile_id"));
+
+  if (!profileId) {
+    settingsError(USERS_PATH, "Der zu löschende User fehlt.");
+  }
+
+  if (profileId === user.id) {
+    settingsError(USERS_PATH, "Du kannst deinen eigenen Admin-Zugang nicht löschen.");
+  }
+
+  const admin = getAdminClient();
+  const { data: profile, error: profileError } = await admin
+    .from("profiles")
+    .select("email, display_name, full_name")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  if (profileError) {
+    settingsError(USERS_PATH, profileError.message);
+  }
+
+  if (!profile) {
+    settingsError(USERS_PATH, "Der User wurde nicht gefunden.");
+  }
+
+  const { error: banError } = await admin.auth.admin.updateUserById(profileId, {
+    ban_duration: "876000h",
+  });
+
+  if (banError) {
+    settingsError(USERS_PATH, banError.message);
+  }
+
+  const ownershipTables = [
+    "activities",
+    "tasks",
+    "deals",
+    "contacts",
+    "companies",
+    "value_props",
+  ] as const;
+
+  for (const table of ownershipTables) {
+    const { error: transferError } = await admin
+      .from(table)
+      .update({ owner_id: user.id })
+      .eq("owner_id", profileId);
+
+    if (transferError) {
+      await admin.auth.admin.updateUserById(profileId, { ban_duration: "none" });
+      settingsError(
+        USERS_PATH,
+        `CRM-Daten konnten nicht übertragen werden: ${transferError.message}`,
+      );
+    }
+  }
+
+  const { error: deleteError } = await admin.auth.admin.deleteUser(profileId);
+
+  if (deleteError) {
+    await admin.auth.admin.updateUserById(profileId, { ban_duration: "none" });
+    settingsError(USERS_PATH, deleteError.message);
+  }
+
+  revalidatePath(USERS_PATH);
+  revalidatePath("/dashboard");
+  revalidatePath("/companies");
+  revalidatePath("/contacts");
+  revalidatePath("/deals");
+  revalidatePath("/activities");
+  revalidatePath("/tasks");
+
+  const deletedName =
+    profile.display_name?.trim() ||
+    profile.full_name?.trim() ||
+    profile.email?.trim() ||
+    "User";
+  settingsRedirect(USERS_PATH, `${deletedName} wurde gelöscht.`);
 }
 
 function getAdminClient() {
@@ -295,6 +440,30 @@ function getAdminClient() {
       persistSession: false,
     },
   });
+}
+
+function roleFromForm(value: FormDataEntryValue | null) {
+  return requiredText(value) === "admin" ? "admin" : "member";
+}
+
+function permissionsForRole(role: "admin" | "member") {
+  if (role === "admin") {
+    return {
+      can_create_deals: true,
+      can_create_companies: true,
+      can_delete_companies: true,
+      can_manage_users: true,
+      can_manage_settings: true,
+    };
+  }
+
+  return {
+    can_create_deals: true,
+    can_create_companies: true,
+    can_delete_companies: false,
+    can_manage_users: false,
+    can_manage_settings: false,
+  };
 }
 
 function revalidateValueProps() {

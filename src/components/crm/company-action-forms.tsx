@@ -12,6 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Contact } from "@/lib/db/contacts";
+import {
+  TASK_DESCRIPTION_MAX_LENGTH,
+  TASK_TITLE_MAX_LENGTH,
+} from "@/lib/tasks/limits";
 
 type CompanyActionFormsProps = {
   companyId: string;
@@ -48,6 +52,7 @@ export function CompanyActionForms({
                   id="company-task-title"
                   name="title"
                   required
+                  maxLength={TASK_TITLE_MAX_LENGTH}
                   placeholder="Follow-up vorbereiten"
                 />
               </div>
@@ -86,6 +91,7 @@ export function CompanyActionForms({
                 id="company-task-description"
                 name="description"
                 rows={4}
+                maxLength={TASK_DESCRIPTION_MAX_LENGTH}
                 placeholder="Was soll als nächstes passieren?"
               />
             </div>

@@ -2,7 +2,15 @@ import { createTask } from "@/app/(crm)/tasks/actions";
 import { TaskForm } from "@/components/crm/task-form";
 import { listCompanies } from "@/lib/db/companies";
 import { listDeals } from "@/lib/db/deals";
-import { displayNameForProfile, getCurrentProfile } from "@/lib/db/profiles";
+import {
+  displayNameForProfile,
+  getCurrentProfile,
+  listTeamProfiles,
+} from "@/lib/db/profiles";
+import {
+  TASK_DESCRIPTION_MAX_LENGTH,
+  TASK_TITLE_MAX_LENGTH,
+} from "@/lib/tasks/limits";
 
 type NewTaskPageProps = {
   searchParams: Promise<{
@@ -11,11 +19,12 @@ type NewTaskPageProps = {
 };
 
 export default async function NewTaskPage({ searchParams }: NewTaskPageProps) {
-  const [{ error }, companies, deals, profile] = await Promise.all([
+  const [{ error }, companies, deals, profile, profiles] = await Promise.all([
     searchParams,
     listCompanies(),
     listDeals(),
     getCurrentProfile(),
+    listTeamProfiles(),
   ]);
 
   return (
@@ -30,7 +39,9 @@ export default async function NewTaskPage({ searchParams }: NewTaskPageProps) {
         action={createTask}
         companies={companies}
         deals={deals}
+        defaultOwnerId={profile.id}
         ownerName={displayNameForProfile(profile)}
+        profiles={profiles}
         error={errorMessage(error)}
         submitLabel="Erstellen"
       />
@@ -49,6 +60,14 @@ function errorMessage(error?: string) {
 
   if (error === "missing_due_date") {
     return "Bitte wähle ein Fälligkeitsdatum.";
+  }
+
+  if (error === "title_too_long") {
+    return `Der Task-Titel darf maximal ${TASK_TITLE_MAX_LENGTH} Zeichen lang sein.`;
+  }
+
+  if (error === "description_too_long") {
+    return `Die Task-Beschreibung darf maximal ${TASK_DESCRIPTION_MAX_LENGTH} Zeichen lang sein.`;
   }
 
   return decodeURIComponent(error);

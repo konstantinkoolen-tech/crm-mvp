@@ -24,6 +24,8 @@ import {
   getCurrentProfile,
   listTeamProfiles,
 } from "@/lib/db/profiles";
+import { UserDeleteButton } from "@/components/crm/user-delete-button";
+import { AssociatedFormSubmitButton } from "@/components/crm/associated-form-submit-button";
 
 type UsersSettingsPageProps = {
   searchParams: Promise<{
@@ -97,8 +99,8 @@ export default async function UsersSettingsPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={inviteUser} className="flex flex-col gap-3 sm:flex-row">
-              <div className="flex-1 space-y-2">
+            <form action={inviteUser} className="grid gap-3 lg:grid-cols-[1fr_180px_auto]">
+              <div className="space-y-2">
                 <Label htmlFor="invite-email">E-Mail</Label>
                 <Input
                   disabled={!isAdmin}
@@ -107,6 +109,19 @@ export default async function UsersSettingsPage({
                   placeholder="name@unternehmen.de"
                   type="email"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invite-role">Rolle</Label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
+                  defaultValue="member"
+                  disabled={!isAdmin}
+                  id="invite-role"
+                  name="role"
+                >
+                  <option value="member">Member</option>
+                  <option value="admin">Admin</option>
+                </select>
               </div>
               <Button className="self-end" disabled={!isAdmin} type="submit">
                 <MailPlus aria-hidden="true" />
@@ -186,28 +201,52 @@ export default async function UsersSettingsPage({
                     </form>
                   </TableCell>
                   <TableCell className="align-top">
-                    <select
-                      className="h-9 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                      defaultValue={profile.role === "admin" ? "admin" : "member"}
-                      disabled={!isAdmin}
-                      form={`profile-${profile.id}`}
-                      name="role"
-                    >
-                      <option value="admin">Admin</option>
-                      <option value="member">Member</option>
-                    </select>
+                    {profile.id === currentProfile.id ? (
+                      <>
+                        <input
+                          form={`profile-${profile.id}`}
+                          name="role"
+                          type="hidden"
+                          value="admin"
+                        />
+                        <Badge variant="secondary">Admin</Badge>
+                      </>
+                    ) : (
+                      <select
+                        className="h-9 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                        defaultValue={profile.role === "admin" ? "admin" : "member"}
+                        disabled={!isAdmin}
+                        form={`profile-${profile.id}`}
+                        name="role"
+                      >
+                        <option value="admin">Admin</option>
+                        <option value="member">Member</option>
+                      </select>
+                    )}
                   </TableCell>
                   <TableCell className="align-top">
-                    <select
-                      className="h-9 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                      defaultValue={profile.status}
-                      disabled={!isAdmin}
-                      form={`profile-${profile.id}`}
-                      name="status"
-                    >
-                      <option value="active">Aktiv</option>
-                      <option value="inactive">Inaktiv</option>
-                    </select>
+                    {profile.id === currentProfile.id ? (
+                      <>
+                        <input
+                          form={`profile-${profile.id}`}
+                          name="status"
+                          type="hidden"
+                          value="active"
+                        />
+                        <Badge variant="secondary">Aktiv</Badge>
+                      </>
+                    ) : (
+                      <select
+                        className="h-9 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                        defaultValue={profile.status}
+                        disabled={!isAdmin}
+                        form={`profile-${profile.id}`}
+                        name="status"
+                      >
+                        <option value="active">Aktiv</option>
+                        <option value="inactive">Deaktiviert</option>
+                      </select>
+                    )}
                   </TableCell>
                   <TableCell className="align-top">
                     <div className="grid gap-2">
@@ -230,9 +269,20 @@ export default async function UsersSettingsPage({
                     </div>
                   </TableCell>
                   <TableCell className="align-top text-right">
-                    <Button disabled={!isAdmin} form={`profile-${profile.id}`} type="submit">
-                      Speichern
-                    </Button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <AssociatedFormSubmitButton
+                        disabled={!isAdmin}
+                        formId={`profile-${profile.id}`}
+                      >
+                        Speichern
+                      </AssociatedFormSubmitButton>
+                      {isAdmin && profile.id !== currentProfile.id ? (
+                        <UserDeleteButton
+                          profileId={profile.id}
+                          userName={displayNameForProfile(profile)}
+                        />
+                      ) : null}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

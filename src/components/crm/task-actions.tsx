@@ -1,6 +1,7 @@
-import { CheckCircle2, PlayCircle, Trash2 } from "lucide-react";
+import { CheckCircle2, PlayCircle } from "lucide-react";
 import type React from "react";
-import { deleteTask, updateTaskStatus } from "@/app/(crm)/tasks/actions";
+import { updateTaskStatus } from "@/app/(crm)/tasks/actions";
+import { TaskDeleteButton } from "@/components/crm/task-delete-button";
 import { Button } from "@/components/ui/button";
 import type { TaskStatus } from "@/types/database";
 
@@ -11,7 +12,7 @@ type TaskActionsProps = {
 
 export function TaskActions({ taskId, status }: TaskActionsProps) {
   return (
-    <div className="flex flex-wrap justify-end gap-2">
+    <div className="flex flex-nowrap items-center justify-end gap-1.5 whitespace-nowrap">
       {status === "open" ? (
         <TaskStatusButton taskId={taskId} status="in_progress">
           <PlayCircle aria-hidden="true" />
@@ -24,13 +25,7 @@ export function TaskActions({ taskId, status }: TaskActionsProps) {
           Erledigt
         </TaskStatusButton>
       ) : null}
-      <form action={deleteTask}>
-        <input type="hidden" name="task_id" value={taskId} />
-        <Button type="submit" variant="ghost" size="sm">
-          <Trash2 aria-hidden="true" />
-          Löschen
-        </Button>
-      </form>
+      <TaskDeleteButton taskId={taskId} />
     </div>
   );
 }

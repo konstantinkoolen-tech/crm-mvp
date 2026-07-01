@@ -1,24 +1,18 @@
-import { Trash2 } from "lucide-react";
 import { deleteCompany } from "@/app/(crm)/companies/actions";
-import { Button } from "@/components/ui/button";
+import { DeleteConfirmButton } from "@/components/crm/delete-confirm-button";
 
 type CompanyDeleteFormProps = {
   companyId: string;
   compact?: boolean;
 };
 
-export function CompanyDeleteForm({ companyId, compact }: CompanyDeleteFormProps) {
+export function CompanyDeleteForm({ companyId }: CompanyDeleteFormProps) {
   return (
-    <form action={deleteCompany}>
-      <input type="hidden" name="company_id" value={companyId} />
-      <Button
-        type="submit"
-        variant={compact ? "ghost" : "destructive"}
-        size={compact ? "sm" : "default"}
-      >
-        <Trash2 aria-hidden="true" />
-        Löschen
-      </Button>
-    </form>
+    <DeleteConfirmButton
+      action={deleteCompany}
+      description="Willst du das Unternehmen wirklich löschen? Zugeordnete Kontakte, Deals und Aktivitäten können davon betroffen sein."
+      fields={[{ name: "company_id", value: companyId }]}
+      label="Unternehmen"
+    />
   );
 }

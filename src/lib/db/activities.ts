@@ -1,5 +1,14 @@
 import { getCompanyClient } from "@/lib/db/companies";
+import type { ListOwner } from "@/lib/db/companies";
+import {
+  activityDirectionLabels,
+  activityTypeLabels,
+  outreachKindLabels,
+  outreachOutcomeLabels,
+  painStatementLabels,
+} from "@/lib/activities/constants";
 import type {
+  ActivityDirection,
   ActivityStatus,
   ActivityType,
   OutreachKind,
@@ -7,35 +16,12 @@ import type {
   PainStatement,
 } from "@/types/database";
 
-export const activityTypeLabels: Record<ActivityType, string> = {
-  note: "Notiz",
-  linkedin_message: "LinkedIn Message",
-  call: "Call",
-  email: "E-Mail",
-  meeting: "Meeting",
-  task_update: "Task-Update",
-};
-
-export const outreachKindLabels: Record<OutreachKind, string> = {
-  snowflake: "Snowflake",
-  fire: "Fire",
-  fire_plus: "Fire+",
-};
-
-export const outreachOutcomeLabels: Record<OutreachOutcome, string> = {
-  no_response: "No response",
-  wrong_number: "Falsche Nummer",
-  gatekeeper: "Gatekeeper",
-  no_time: "Keine Zeit",
-  not_interested: "Kein Interesse",
-  interested: "Interesse",
-  follow_up_booked: "Follow-up gebucht",
-};
-
-export const painStatementLabels: Record<PainStatement, string> = {
-  no_statement: "Keine Aussage",
-  pain_not_identified: "Pain nicht erkannt",
-  pain_identified: "Pain erkannt",
+export {
+  activityDirectionLabels,
+  activityTypeLabels,
+  outreachKindLabels,
+  outreachOutcomeLabels,
+  painStatementLabels,
 };
 
 export type Activity = {
@@ -45,6 +31,7 @@ export type Activity = {
   contact_id: string | null;
   deal_id: string | null;
   type: ActivityType;
+  direction: ActivityDirection;
   status: ActivityStatus;
   title: string;
   body: string | null;
@@ -52,6 +39,7 @@ export type Activity = {
   outreach_outcome: OutreachOutcome | null;
   pain_statement: PainStatement;
   value_prop_id: string | null;
+  last_edited_by: string | null;
   occurred_at: string;
   created_at: string;
   updated_at: string;
@@ -76,10 +64,12 @@ export type ActivityWithContext = Activity & {
     code: string;
     label: string;
   } | null;
+  owner: ListOwner | null;
+  last_editor: ListOwner | null;
 };
 
 const activitySelect =
-  "id, owner_id, company_id, contact_id, deal_id, type, status, title, body, outreach_kind, outreach_outcome, pain_statement, value_prop_id, occurred_at, created_at, updated_at";
+  "id, owner_id, company_id, contact_id, deal_id, type, direction, status, title, body, outreach_kind, outreach_outcome, pain_statement, value_prop_id, last_edited_by, occurred_at, created_at, updated_at";
 
 export async function listActivities() {
   const { supabase } = await getCompanyClient();
@@ -87,7 +77,7 @@ export async function listActivities() {
   const { data, error } = await supabase
     .from("activities")
     .select(
-      `${activitySelect}, company:companies(id, name), contact:contacts(id, first_name, last_name), deal:deals(id, title), value_prop:value_props(id, code, label)`,
+      `${activitySelect}, company:companies(id, name), contact:contacts(id, first_name, last_name), deal:deals(id, title), value_prop:value_props(id, code, label), owner:profiles!activities_owner_id_fkey(id, email, full_name, display_name), last_editor:profiles!activities_last_edited_by_fkey(id, email, full_name, display_name)`,
     )
     .order("occurred_at", { ascending: false });
 
@@ -104,7 +94,7 @@ export async function listActivitiesForCompany(companyId: string) {
   const { data, error } = await supabase
     .from("activities")
     .select(
-      `${activitySelect}, contact:contacts(id, first_name, last_name), deal:deals(id, title), value_prop:value_props(id, code, label)`,
+      `${activitySelect}, company:companies(id, name), contact:contacts(id, first_name, last_name), deal:deals(id, title), value_prop:value_props(id, code, label), owner:profiles!activities_owner_id_fkey(id, email, full_name, display_name), last_editor:profiles!activities_last_edited_by_fkey(id, email, full_name, display_name)`,
     )
     .eq("company_id", companyId)
     .order("occurred_at", { ascending: false });
@@ -122,7 +112,7 @@ export async function listActivitiesForDeal(dealId: string) {
   const { data, error } = await supabase
     .from("activities")
     .select(
-      `${activitySelect}, company:companies(id, name), contact:contacts(id, first_name, last_name), deal:deals(id, title), value_prop:value_props(id, code, label)`,
+      `${activitySelect}, company:companies(id, name), contact:contacts(id, first_name, last_name), deal:deals(id, title), value_prop:value_props(id, code, label), owner:profiles!activities_owner_id_fkey(id, email, full_name, display_name), last_editor:profiles!activities_last_edited_by_fkey(id, email, full_name, display_name)`,
     )
     .eq("deal_id", dealId)
     .order("occurred_at", { ascending: false });

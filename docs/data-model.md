@@ -28,9 +28,10 @@ Unternehmen im CRM.
 | `owner_id` | `uuid` | Zustaendiger Nutzer, FK auf `profiles(id)` |
 | `name` | `text` | Unternehmensname |
 | `website` | `text` | Website |
+| `company_email` | `text` | Optionale Company-E-Mail |
 | `industry` | `text` | Branche |
-| `employee_count` | `integer` | Unternehmensgroesse |
-| `status` | `company_status` | `active`, `inactive`, `archived` |
+| `employee_count` | `text` | Unternehmensgroesse als Auswahl: `1-5`, `6-10`, `11-20`, `21-50`, `50+` |
+| `status` | `text` | Automatisch berechnet: `new`, `contacted`, `in_exchange`, `active_customer`, `lost_customer`, `churn` |
 | `notes` | `text` | Freitext |
 | `created_at`, `updated_at` | `timestamptz` | Audit-Felder |
 
@@ -63,7 +64,7 @@ Pipeline-Objekte fuer Sales-/Recruiting-Chancen.
 | `primary_contact_id` | `uuid` | Optionaler Hauptkontakt |
 | `title` | `text` | Deal-Titel |
 | `stage` | `deal_stage` | Pipeline-Stufe |
-| `status` | `deal_status` | `open`, `won`, `lost`, `archived` |
+| `status` | `text` | `open`, `won`, `lost`, `churn` |
 | `value_amount` | `numeric(12,2)` | Deal-Wert |
 | `value_currency` | `char(3)` | Waehrung, Standard `EUR` |
 | `probability` | `integer` | Abschlusswahrscheinlichkeit 0-100 |

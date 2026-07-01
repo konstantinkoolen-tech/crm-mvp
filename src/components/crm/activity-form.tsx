@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { activityTypeLabels } from "@/lib/db/activities";
+import { activityTypeLabels } from "@/lib/activities/constants";
 import type { Contact } from "@/lib/db/contacts";
 import type { ActivityType } from "@/types/database";
 

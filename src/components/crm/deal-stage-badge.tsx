@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { dealStageLabels } from "@/lib/db/deals";
+import { dealStageLabels } from "@/lib/deals/constants";
 import type { DealStage } from "@/types/database";
 
 export function DealStageBadge({ stage }: { stage: DealStage }) {

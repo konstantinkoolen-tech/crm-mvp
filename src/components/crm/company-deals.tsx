@@ -1,8 +1,8 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { DealCreateButton } from "@/components/crm/company-create-buttons";
+import { DealEditModalButton } from "@/components/crm/deal-edit-modal-button";
 import { DealStageBadge } from "@/components/crm/deal-stage-badge";
-import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -18,27 +18,39 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { Company } from "@/lib/db/companies";
 import type { Deal } from "@/lib/db/deals";
+import { dealStatusLabels } from "@/lib/deals/constants";
+import { formatDealValuePair } from "@/lib/deals/value";
 
 type CompanyDealsProps = {
   companyId: string;
+  companies: Company[];
   deals: Deal[];
 };
 
-export function CompanyDeals({ companyId, deals }: CompanyDealsProps) {
+export function CompanyDeals({
+  companyId,
+  companies,
+  deals,
+}: CompanyDealsProps) {
   return (
     <Card>
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle>Deals</CardTitle>
-          <CardDescription>Pipeline-Chancen für dieses Unternehmen.</CardDescription>
+          <CardDescription>
+            Pipeline-Chancen für dieses Unternehmen.
+          </CardDescription>
         </div>
         <DealCreateButton companyId={companyId} />
       </CardHeader>
       <CardContent>
         {deals.length === 0 ? (
           <div className="flex min-h-36 flex-col items-center justify-center rounded-md border border-dashed border-neutral-200 text-center">
-            <p className="text-sm font-medium text-neutral-950">Noch keine Deals</p>
+            <p className="text-sm font-medium text-neutral-950">
+              Noch keine Deals
+            </p>
             <p className="mt-1 max-w-sm text-sm text-neutral-500">
               Erstelle einen Deal und ordne ihn diesem Unternehmen zu.
             </p>
@@ -52,7 +64,8 @@ export function CompanyDeals({ companyId, deals }: CompanyDealsProps) {
               <TableRow>
                 <TableHead>Titel</TableHead>
                 <TableHead>Stufe</TableHead>
-                <TableHead>Wert</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>MRR / ARR</TableHead>
                 <TableHead>Abschluss</TableHead>
                 <TableHead className="text-right">Aktionen</TableHead>
               </TableRow>
@@ -61,15 +74,19 @@ export function CompanyDeals({ companyId, deals }: CompanyDealsProps) {
               {deals.map((deal) => (
                 <TableRow key={deal.id}>
                   <TableCell className="font-medium text-neutral-950">
-                    <Link href={`/deals/${deal.id}`} className="hover:underline">
+                    <Link
+                      href={`/deals/${deal.id}`}
+                      className="hover:underline"
+                    >
                       {deal.title}
                     </Link>
                   </TableCell>
                   <TableCell>
                     <DealStageBadge stage={deal.stage} />
                   </TableCell>
+                  <TableCell>{dealStatusLabels[deal.status]}</TableCell>
                   <TableCell>
-                    {formatDealValue(deal.value_amount, deal.value_currency)}
+                    <DealValueCell deal={deal} />
                   </TableCell>
                   <TableCell>
                     {deal.expected_close_date
@@ -77,12 +94,7 @@ export function CompanyDeals({ companyId, deals }: CompanyDealsProps) {
                       : "-"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link
-                      href={`/deals/${deal.id}/edit`}
-                      className={buttonVariants({ variant: "outline", size: "sm" })}
-                    >
-                      Bearbeiten
-                    </Link>
+                    <DealEditModalButton companies={companies} deal={deal} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -94,22 +106,25 @@ export function CompanyDeals({ companyId, deals }: CompanyDealsProps) {
   );
 }
 
-function formatDealValue(value: Deal["value_amount"], currency: string) {
-  if (value === null) {
+function DealValueCell({ deal }: { deal: Deal }) {
+  const formattedValue = formatDealValuePair(
+    deal.value_amount,
+    deal.value_currency,
+    deal.value_period,
+  );
+
+  if (!formattedValue) {
     return "-";
   }
 
-  const numericValue = Number(value);
-
-  if (Number.isNaN(numericValue)) {
-    return `${value} ${currency}`;
-  }
-
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(numericValue);
+  return (
+    <span className="space-y-0.5">
+      <span className="block text-neutral-950">MRR {formattedValue.mrr}</span>
+      <span className="block text-xs text-neutral-500">
+        ARR {formattedValue.arr}
+      </span>
+    </span>
+  );
 }
 
 function formatDate(date: string) {

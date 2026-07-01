@@ -3,30 +3,19 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { createDeal } from "@/app/(crm)/deals/actions";
+import { DealValuePeriodToggle } from "@/components/crm/deal-value-period-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ModalShell } from "@/components/crm/modal-shell";
 import { Textarea } from "@/components/ui/textarea";
 import type { Company } from "@/lib/db/companies";
-
-const dealStages = [
-  "lead",
-  "qualified",
-  "proposal",
-  "negotiation",
-  "won",
-  "lost",
-] as const;
-
-const dealStageLabels: Record<(typeof dealStages)[number], string> = {
-  lead: "Lead",
-  qualified: "Qualifiziert",
-  proposal: "Angebot",
-  negotiation: "Verhandlung",
-  won: "Gewonnen",
-  lost: "Verloren",
-};
+import {
+  dealStageLabels,
+  dealStages,
+  dealStatusLabels,
+  dealStatuses,
+} from "@/lib/deals/constants";
 
 type DealCreateModalButtonProps = {
   companies: Company[];
@@ -47,7 +36,11 @@ export function DealCreateModalButton({
         {label}
       </Button>
       {open ? (
-        <ModalShell eyebrow="Deal" title="Deal erstellen" onClose={() => setOpen(false)}>
+        <ModalShell
+          eyebrow="Deal"
+          title="Deal erstellen"
+          onClose={() => setOpen(false)}
+        >
           {disabled ? (
             <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
               Lege zuerst ein Unternehmen an, bevor du Deals erstellst.
@@ -100,6 +93,21 @@ export function DealCreateModalButton({
                   </select>
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="global-deal-status">Status</Label>
+                  <select
+                    id="global-deal-status"
+                    name="status"
+                    defaultValue="open"
+                    className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
+                  >
+                    {dealStatuses.map((status) => (
+                      <option key={status} value={status}>
+                        {dealStatusLabels[status]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="global-deal-value">Wert</Label>
                   <Input
                     id="global-deal-value"
@@ -110,6 +118,7 @@ export function DealCreateModalButton({
                     placeholder="25000"
                   />
                 </div>
+                <DealValuePeriodToggle idPrefix="global-deal-value-period" />
                 <div className="space-y-2">
                   <Label htmlFor="global-deal-currency">Währung</Label>
                   <Input
@@ -120,7 +129,9 @@ export function DealCreateModalButton({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="global-deal-probability">Wahrscheinlichkeit</Label>
+                  <Label htmlFor="global-deal-probability">
+                    Wahrscheinlichkeit
+                  </Label>
                   <Input
                     id="global-deal-probability"
                     name="probability"
@@ -131,8 +142,14 @@ export function DealCreateModalButton({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="global-deal-close">Erwarteter Abschluss</Label>
-                  <Input id="global-deal-close" name="expected_close_date" type="date" />
+                  <Label htmlFor="global-deal-close">
+                    Erwarteter Abschluss
+                  </Label>
+                  <Input
+                    id="global-deal-close"
+                    name="expected_close_date"
+                    type="date"
+                  />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="global-deal-description">Beschreibung</Label>
@@ -144,7 +161,11 @@ export function DealCreateModalButton({
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                >
                   Abbrechen
                 </Button>
                 <Button type="submit">Deal erstellen</Button>

@@ -1,6 +1,5 @@
-import { Trash2 } from "lucide-react";
 import { deleteContact } from "@/app/(crm)/contacts/actions";
-import { Button } from "@/components/ui/button";
+import { DeleteConfirmButton } from "@/components/crm/delete-confirm-button";
 
 type ContactDeleteFormProps = {
   contactId: string;
@@ -12,13 +11,14 @@ export function ContactDeleteForm({
   companyId,
 }: ContactDeleteFormProps) {
   return (
-    <form action={deleteContact}>
-      <input type="hidden" name="contact_id" value={contactId} />
-      <input type="hidden" name="company_id" value={companyId} />
-      <Button type="submit" variant="ghost" size="sm">
-        <Trash2 aria-hidden="true" />
-        Löschen
-      </Button>
-    </form>
+    <DeleteConfirmButton
+      action={deleteContact}
+      description="Willst du den Kontakt wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+      fields={[
+        { name: "contact_id", value: contactId },
+        { name: "company_id", value: companyId },
+      ]}
+      label="Kontakt"
+    />
   );
 }

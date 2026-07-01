@@ -5,7 +5,6 @@ import {
   ChevronDown,
   Pencil,
   Plus,
-  Trash2,
   ArrowDown,
   ArrowUp,
   X,
@@ -17,6 +16,8 @@ import {
   updateValueProp,
   updateValuePropStatus,
 } from "@/app/(crm)/settings/actions";
+import { AssociatedFormSubmitButton } from "@/components/crm/associated-form-submit-button";
+import { DeleteConfirmButton } from "@/components/crm/delete-confirm-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -206,6 +207,7 @@ function ValuePropModal({
 }) {
   const valueProp = modal.mode === "edit" ? modal.valueProp : null;
   const action = modal.mode === "edit" ? updateValueProp : createValueProp;
+  const formId = `value-prop-${valueProp?.id ?? "new"}`;
 
   return (
     <div
@@ -245,7 +247,7 @@ function ValuePropModal({
           </Button>
         </div>
 
-        <form action={action} className="mt-5 space-y-4">
+        <form action={action} className="mt-5 space-y-4" id={formId}>
           {valueProp ? (
             <input type="hidden" name="value_prop_id" value={valueProp.id} />
           ) : null}
@@ -306,30 +308,31 @@ function ValuePropModal({
             />
           </div>
 
-          <div className="flex justify-between gap-2">
-            {valueProp ? (
-              <Button
-                formAction={deleteValueProp}
-                type="submit"
-                variant="destructive"
-                disabled={!isAdmin}
-              >
-                <Trash2 aria-hidden="true" />
-                Löschen
-              </Button>
-            ) : (
-              <span />
-            )}
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Abbrechen
-              </Button>
-              <Button type="submit" disabled={!isAdmin}>
-                Speichern
-              </Button>
-            </div>
-          </div>
         </form>
+
+        <div className="mt-4 flex justify-between gap-2">
+          {valueProp ? (
+            <DeleteConfirmButton
+              action={deleteValueProp}
+              description="Willst du die Value Prop wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+              fields={[{ name: "value_prop_id", value: valueProp.id }]}
+              label="Value Prop"
+            />
+          ) : (
+            <span />
+          )}
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Abbrechen
+            </Button>
+            <AssociatedFormSubmitButton
+              disabled={!isAdmin}
+              formId={formId}
+            >
+              Speichern
+            </AssociatedFormSubmitButton>
+          </div>
+        </div>
       </div>
     </div>
   );

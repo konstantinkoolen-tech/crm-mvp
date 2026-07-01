@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import {
   Card,
   CardContent,
@@ -18,6 +21,8 @@ type ContactFormProps = {
   companyName?: string;
   contact?: Contact;
   error?: string;
+  onCancel?: () => void;
+  presentation?: "page" | "modal";
   submitLabel: string;
 };
 
@@ -27,19 +32,25 @@ export function ContactForm({
   companyName,
   contact,
   error,
+  onCancel,
+  presentation = "page",
   submitLabel,
 }: ContactFormProps) {
+  const isModal = presentation === "modal";
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{contact ? "Kontakt bearbeiten" : "Kontakt erstellen"}</CardTitle>
-        <CardDescription>
-          {companyName
-            ? `Ansprechpartner für ${companyName}`
-            : "Ansprechpartner einem Unternehmen zuordnen"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Card className={isModal ? "border-0 shadow-none" : undefined}>
+      {!isModal ? (
+        <CardHeader>
+          <CardTitle>{contact ? "Kontakt bearbeiten" : "Kontakt erstellen"}</CardTitle>
+          <CardDescription>
+            {companyName
+              ? `Ansprechpartner für ${companyName}`
+              : "Ansprechpartner einem Unternehmen zuordnen"}
+          </CardDescription>
+        </CardHeader>
+      ) : null}
+      <CardContent className={isModal ? "p-0" : undefined}>
         {error ? (
           <div className="mb-5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
@@ -142,12 +153,18 @@ export function ContactForm({
           </div>
 
           <div className="flex items-center justify-end gap-3">
-            <Link
-              href={`/companies/${companyId}`}
-              className={buttonVariants({ variant: "outline" })}
-            >
-              Abbrechen
-            </Link>
+            {isModal ? (
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Abbrechen
+              </Button>
+            ) : (
+              <Link
+                href={`/companies/${companyId}`}
+                className={buttonVariants({ variant: "outline" })}
+              >
+                Abbrechen
+              </Link>
+            )}
             <Button type="submit">{submitLabel}</Button>
           </div>
         </form>

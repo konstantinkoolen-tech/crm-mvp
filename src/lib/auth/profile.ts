@@ -30,6 +30,7 @@ export async function ensureProfile(
     full_name: fullName,
     display_name: fullName ?? email?.split("@")[0] ?? null,
     role: isInitialAdmin ? "admin" : "member",
+    status: isInitialAdmin ? "active" : "inactive",
     can_create_deals: true,
     can_create_companies: true,
     can_delete_companies: isInitialAdmin,

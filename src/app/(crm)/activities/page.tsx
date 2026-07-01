@@ -1,8 +1,9 @@
 import { ActivityTimeline } from "@/components/crm/activity-timeline";
 import { listActivities } from "@/lib/db/activities";
+import { listActiveValueProps } from "@/lib/db/value-props";
 
 export default function ActivitiesPage() {
-  const activitiesPromise = listActivities();
+  const dataPromise = Promise.all([listActivities(), listActiveValueProps()]);
 
   return (
     <section className="space-y-6">
@@ -12,22 +13,28 @@ export default function ActivitiesPage() {
           Notizen, Calls, E-Mails und Meetings chronologisch über alle Kontexte.
         </p>
       </div>
-      <ActivitiesList activitiesPromise={activitiesPromise} />
+      <ActivitiesList dataPromise={dataPromise} />
     </section>
   );
 }
 
 async function ActivitiesList({
-  activitiesPromise,
+  dataPromise,
 }: {
-  activitiesPromise: ReturnType<typeof listActivities>;
+  dataPromise: Promise<
+    [
+      Awaited<ReturnType<typeof listActivities>>,
+      Awaited<ReturnType<typeof listActiveValueProps>>,
+    ]
+  >;
 }) {
-  const activities = await activitiesPromise;
+  const [activities, valueProps] = await dataPromise;
 
   return (
     <ActivityTimeline
       activities={activities}
       returnTo="/activities"
+      valueProps={valueProps}
       title="Alle Aktivitäten"
       description="Neueste Einträge zuerst"
     />
