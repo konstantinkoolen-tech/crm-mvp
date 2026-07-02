@@ -36,8 +36,8 @@ export function DealRevenueScopeCard({
 
   return (
     <Card className={cn("h-full", className)}>
-      <CardContent className="p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <CardContent className="flex h-full flex-col justify-between p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-sm text-neutral-500">MRR / ARR</p>
             <p className="mt-1 text-xs text-neutral-500">
@@ -64,7 +64,7 @@ export function DealRevenueScopeCard({
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-2 gap-3">
           <RevenueValue
             icon={
               <TrendingUp

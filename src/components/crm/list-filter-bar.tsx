@@ -9,6 +9,7 @@ type FilterOption = {
 };
 
 type ListFilterBarProps = {
+  children?: React.ReactNode;
   sortValue: string;
   sortOptions: FilterOption[];
   onSortChange: (value: string) => void;
@@ -24,6 +25,7 @@ type ListFilterBarProps = {
 };
 
 export function ListFilterBar({
+  children,
   sortValue,
   sortOptions,
   onSortChange,
@@ -71,6 +73,7 @@ export function ListFilterBar({
           onChange={onTypeChange}
         />
       ) : null}
+      {children}
     </div>
   );
 }

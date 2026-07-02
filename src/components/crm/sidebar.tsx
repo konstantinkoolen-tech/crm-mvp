@@ -4,7 +4,6 @@ import {
   Handshake,
   LayoutDashboard,
   NotebookText,
-  Tags,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -43,19 +42,19 @@ const navigation = [
     label: "Tasks",
     icon: ClipboardList,
   },
-  {
-    href: "/value-props",
-    label: "Value Props",
-    icon: Tags,
-  },
 ];
 
 type SidebarProps = {
+  canManageValueProps?: boolean;
   hasOverdueTasks?: boolean;
   userEmail?: string | null;
 };
 
-export function Sidebar({ hasOverdueTasks = false, userEmail }: SidebarProps) {
+export function Sidebar({
+  canManageValueProps = false,
+  hasOverdueTasks = false,
+  userEmail,
+}: SidebarProps) {
   return (
     <aside className="hidden h-dvh w-64 shrink-0 border-r border-neutral-200 bg-white lg:flex lg:flex-col">
       <div className="border-b border-neutral-200 px-5 py-4">
@@ -98,7 +97,10 @@ export function Sidebar({ hasOverdueTasks = false, userEmail }: SidebarProps) {
         <div className="mb-2 truncate px-3 text-xs font-medium text-neutral-500">
           {userEmail ?? "Angemeldet"}
         </div>
-        <SettingsMenu userEmail={userEmail} />
+        <SettingsMenu
+          canManageValueProps={canManageValueProps}
+          userEmail={userEmail}
+        />
         <LogoutButton />
       </div>
     </aside>

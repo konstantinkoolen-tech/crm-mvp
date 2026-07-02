@@ -54,6 +54,8 @@ import type {
   PainStatement,
 } from "@/types/database";
 
+const DASHBOARD_TILE_CLASS = "h-full min-h-[154px]";
+
 export default function DashboardPage() {
   const dataPromise = Promise.all([
     listOpenTasks(),
@@ -100,7 +102,7 @@ async function DashboardContent({
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid auto-rows-fr items-stretch gap-4 md:grid-cols-3 xl:grid-cols-6">
         <MetricCard
           href="/tasks"
           icon={
@@ -127,7 +129,7 @@ async function DashboardContent({
           value={pipelineDeals.length}
         />
         <DealRevenueScopeCard
-          className="md:col-span-2 xl:col-span-2"
+          className={`${DASHBOARD_TILE_CLASS} md:col-span-2 xl:col-span-2`}
           pipeline={{
             arr: formatDealTotal(pipelineDealValueTotals, "arr"),
             dealCount: pipelineDeals.length,
@@ -870,11 +872,15 @@ function MetricCard({
   value: number | string;
 }) {
   return (
-    <Link href={href}>
+    <Link href={href} className="block h-full">
       <Card
-        className={tone === "danger" ? "border-red-200 bg-red-50" : undefined}
+        className={
+          tone === "danger"
+            ? `${DASHBOARD_TILE_CLASS} border-red-200 bg-red-50`
+            : DASHBOARD_TILE_CLASS
+        }
       >
-        <CardContent className="p-4">
+        <CardContent className="flex h-full flex-col justify-between p-4">
           <div className="flex items-center justify-between gap-3">
             <p
               className={

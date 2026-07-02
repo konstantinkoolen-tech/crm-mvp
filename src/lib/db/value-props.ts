@@ -1,5 +1,5 @@
 import { getCompanyClient } from "@/lib/db/companies";
-export { getCurrentProfile, requireAdminProfile } from "@/lib/db/profiles";
+export { getCurrentProfile } from "@/lib/db/profiles";
 
 export type ValueProp = {
   id: string;

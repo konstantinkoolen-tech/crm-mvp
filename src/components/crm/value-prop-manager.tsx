@@ -26,7 +26,7 @@ import type { ValueProp } from "@/lib/db/value-props";
 
 type ValuePropManagerProps = {
   valueProps: ValueProp[];
-  isAdmin: boolean;
+  canManageValueProps: boolean;
 };
 
 type ModalState =
@@ -41,7 +41,7 @@ type ModalState =
 
 export function ValuePropManager({
   valueProps,
-  isAdmin,
+  canManageValueProps,
 }: ValuePropManagerProps) {
   const [modal, setModal] = useState<ModalState | null>(null);
 
@@ -52,7 +52,7 @@ export function ValuePropManager({
           <Button
             type="button"
             onClick={() => setModal({ mode: "create" })}
-            disabled={!isAdmin}
+            disabled={!canManageValueProps}
           >
             <Plus aria-hidden="true" />
             Value Prop hinzufügen
@@ -78,12 +78,12 @@ export function ValuePropManager({
                     <MoveButton
                       valuePropId={valueProp.id}
                       direction="up"
-                      disabled={!isAdmin || index === 0}
+                      disabled={!canManageValueProps || index === 0}
                     />
                     <MoveButton
                       valuePropId={valueProp.id}
                       direction="down"
-                      disabled={!isAdmin || index === valueProps.length - 1}
+                      disabled={!canManageValueProps || index === valueProps.length - 1}
                     />
                   </div>
 
@@ -114,7 +114,7 @@ export function ValuePropManager({
                     <select
                       name="status"
                       defaultValue={valueProp.status}
-                      disabled={!isAdmin}
+                      disabled={!canManageValueProps}
                       onChange={(event) => event.currentTarget.form?.requestSubmit()}
                       className="h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20 disabled:cursor-not-allowed disabled:opacity-50"
                     >
@@ -127,7 +127,7 @@ export function ValuePropManager({
                     type="button"
                     variant="outline"
                     size="icon"
-                    disabled={!isAdmin}
+                    disabled={!canManageValueProps}
                     aria-label={`${valueProp.label} bearbeiten`}
                     onClick={(event) => {
                       event.preventDefault();
@@ -158,7 +158,7 @@ export function ValuePropManager({
         <ValuePropModal
           modal={modal}
           onClose={() => setModal(null)}
-          isAdmin={isAdmin}
+          canManageValueProps={canManageValueProps}
         />
       ) : null}
     </>
@@ -199,11 +199,11 @@ function MoveButton({
 function ValuePropModal({
   modal,
   onClose,
-  isAdmin,
+  canManageValueProps,
 }: {
   modal: ModalState;
   onClose: () => void;
-  isAdmin: boolean;
+  canManageValueProps: boolean;
 }) {
   const valueProp = modal.mode === "edit" ? modal.valueProp : null;
   const action = modal.mode === "edit" ? updateValueProp : createValueProp;
@@ -260,7 +260,7 @@ function ValuePropModal({
                 name="code"
                 defaultValue={valueProp?.code ?? ""}
                 placeholder="A"
-                disabled={!isAdmin}
+                disabled={!canManageValueProps}
                 required
               />
             </div>
@@ -271,7 +271,7 @@ function ValuePropModal({
                 name="label"
                 defaultValue={valueProp?.label ?? ""}
                 placeholder="Feedbackloop"
-                disabled={!isAdmin}
+                disabled={!canManageValueProps}
                 required
               />
             </div>
@@ -281,7 +281,7 @@ function ValuePropModal({
                 id="value-prop-modal-status"
                 name="status"
                 defaultValue={valueProp?.status ?? "active"}
-                disabled={!isAdmin}
+                disabled={!canManageValueProps}
                 className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="active">Aktiv</option>
@@ -304,7 +304,7 @@ function ValuePropModal({
               rows={6}
               defaultValue={valueProp?.description ?? ""}
               placeholder="Wann nutzen wir diese Value Prop, welche Pain-Punkte adressiert sie, welche Formulierung hilft?"
-              disabled={!isAdmin}
+              disabled={!canManageValueProps}
             />
           </div>
 
@@ -326,7 +326,7 @@ function ValuePropModal({
               Abbrechen
             </Button>
             <AssociatedFormSubmitButton
-              disabled={!isAdmin}
+              disabled={!canManageValueProps}
               formId={formId}
             >
               Speichern

@@ -4,10 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { getCompanyClient } from "@/lib/db/companies";
-import { requireAdminProfile } from "@/lib/db/profiles";
+import { requireAdminProfile, requireValuePropsProfile } from "@/lib/db/profiles";
 import { getSiteUrl } from "@/lib/site-url";
 
-const VALUE_PROPS_PATH = "/value-props";
+const VALUE_PROPS_PATH = "/settings/value-props";
 const USERS_PATH = "/settings/users";
 
 function requiredText(value: FormDataEntryValue | null) {
@@ -45,8 +45,21 @@ async function ensureAdminOrRedirect(path = VALUE_PROPS_PATH) {
   }
 }
 
+async function ensureValuePropsOrRedirect() {
+  try {
+    await requireValuePropsProfile();
+  } catch (error) {
+    settingsError(
+      VALUE_PROPS_PATH,
+      error instanceof Error
+        ? error.message
+        : "Nur User mit Value-Props-Recht können diese Einstellung ändern.",
+    );
+  }
+}
+
 export async function createValueProp(formData: FormData) {
-  await ensureAdminOrRedirect();
+  await ensureValuePropsOrRedirect();
   const { supabase, user } = await getCompanyClient();
   const code = requiredText(formData.get("code"));
   const label = requiredText(formData.get("label"));
@@ -73,7 +86,7 @@ export async function createValueProp(formData: FormData) {
 }
 
 export async function updateValueProp(formData: FormData) {
-  await ensureAdminOrRedirect();
+  await ensureValuePropsOrRedirect();
   const { supabase } = await getCompanyClient();
   const valuePropId = requiredText(formData.get("value_prop_id"));
   const code = requiredText(formData.get("code"));
@@ -103,7 +116,7 @@ export async function updateValueProp(formData: FormData) {
 }
 
 export async function updateValuePropStatus(formData: FormData) {
-  await ensureAdminOrRedirect();
+  await ensureValuePropsOrRedirect();
   const { supabase } = await getCompanyClient();
   const valuePropId = requiredText(formData.get("value_prop_id"));
   const status = requiredText(formData.get("status")) === "archived" ? "archived" : "active";
@@ -126,8 +139,8 @@ export async function updateValuePropStatus(formData: FormData) {
 }
 
 export async function moveValueProp(formData: FormData) {
-  await ensureAdminOrRedirect();
-  const { supabase, user } = await getCompanyClient();
+  await ensureValuePropsOrRedirect();
+  const { supabase } = await getCompanyClient();
   const valuePropId = requiredText(formData.get("value_prop_id"));
   const direction = requiredText(formData.get("direction"));
 
@@ -138,7 +151,6 @@ export async function moveValueProp(formData: FormData) {
   const { data, error } = await supabase
     .from("value_props")
     .select("id, sort_order")
-    .eq("owner_id", user.id)
     .order("sort_order", { ascending: true })
     .order("code", { ascending: true });
 
@@ -178,7 +190,7 @@ export async function moveValueProp(formData: FormData) {
 }
 
 export async function deleteValueProp(formData: FormData) {
-  await ensureAdminOrRedirect();
+  await ensureValuePropsOrRedirect();
   const { supabase } = await getCompanyClient();
   const valuePropId = requiredText(formData.get("value_prop_id"));
 
@@ -322,6 +334,7 @@ export async function updateUserProfile(formData: FormData) {
       can_delete_companies: formData.get("can_delete_companies") === "on",
       can_manage_users: formData.get("can_manage_users") === "on",
       can_manage_settings: formData.get("can_manage_settings") === "on",
+      can_manage_value_props: formData.get("can_manage_value_props") === "on",
     })
     .eq("id", profileId);
 
@@ -454,6 +467,7 @@ function permissionsForRole(role: "admin" | "member") {
       can_delete_companies: true,
       can_manage_users: true,
       can_manage_settings: true,
+      can_manage_value_props: true,
     };
   }
 
@@ -463,11 +477,14 @@ function permissionsForRole(role: "admin" | "member") {
     can_delete_companies: false,
     can_manage_users: false,
     can_manage_settings: false,
+    can_manage_value_props: false,
   };
 }
 
 function revalidateValueProps() {
   revalidatePath("/settings");
+  revalidatePath("/settings/value-props");
   revalidatePath(VALUE_PROPS_PATH);
+  revalidatePath("/value-props");
   revalidatePath("/companies/[companyId]", "page");
 }

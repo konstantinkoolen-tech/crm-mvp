@@ -21,6 +21,19 @@ export default async function CrmLayout({
 
   await ensureProfile(supabase, user);
 
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("status, can_manage_value_props")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError) {
+    throw new Error(profileError.message);
+  }
+
+  const canManageValueProps =
+    profile.status === "active" && Boolean(profile.can_manage_value_props);
+
   const { data: dueOrOverdueTasks, error: dueOrOverdueTasksError } = await supabase
     .from("tasks")
     .select("id")
@@ -36,11 +49,15 @@ export default async function CrmLayout({
     <div className="h-dvh overflow-hidden bg-neutral-50 text-neutral-950">
       <div className="flex h-full min-h-0">
         <Sidebar
+          canManageValueProps={canManageValueProps}
           hasOverdueTasks={Boolean(dueOrOverdueTasks?.length)}
           userEmail={user.email}
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <MobileHeader userEmail={user.email} />
+          <MobileHeader
+            canManageValueProps={canManageValueProps}
+            userEmail={user.email}
+          />
           <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
             {children}
           </main>

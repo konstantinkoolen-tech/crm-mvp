@@ -2,10 +2,14 @@ import Link from "next/link";
 import { LogoutButton } from "@/components/crm/logout-button";
 
 type MobileHeaderProps = {
+  canManageValueProps?: boolean;
   userEmail?: string | null;
 };
 
-export function MobileHeader({ userEmail }: MobileHeaderProps) {
+export function MobileHeader({
+  canManageValueProps = false,
+  userEmail,
+}: MobileHeaderProps) {
   return (
     <header className="border-b border-neutral-200 bg-white px-4 py-3 lg:hidden">
       <div className="flex items-center justify-between gap-3">
@@ -40,12 +44,14 @@ export function MobileHeader({ userEmail }: MobileHeaderProps) {
         <Link className="rounded-md px-3 py-2 text-neutral-700" href="/tasks">
           Tasks
         </Link>
-        <Link className="rounded-md px-3 py-2 text-neutral-700" href="/value-props">
-          Value Props
-        </Link>
         <Link className="rounded-md px-3 py-2 text-neutral-700" href="/settings/users">
           Einstellungen
         </Link>
+        {canManageValueProps ? (
+          <Link className="rounded-md px-3 py-2 text-neutral-700" href="/settings/value-props">
+            Value Props
+          </Link>
+        ) : null}
       </nav>
     </header>
   );

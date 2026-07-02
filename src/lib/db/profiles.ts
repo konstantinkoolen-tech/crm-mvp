@@ -16,12 +16,13 @@ export type TeamProfile = {
   can_delete_companies: boolean;
   can_manage_users: boolean;
   can_manage_settings: boolean;
+  can_manage_value_props: boolean;
   created_at: string;
   updated_at: string;
 };
 
 const profileSelect =
-  "id, email, full_name, display_name, avatar_url, role, status, can_create_deals, can_create_companies, can_delete_companies, can_manage_users, can_manage_settings, created_at, updated_at";
+  "id, email, full_name, display_name, avatar_url, role, status, can_create_deals, can_create_companies, can_delete_companies, can_manage_users, can_manage_settings, can_manage_value_props, created_at, updated_at";
 
 export function displayNameForProfile(profile: Pick<TeamProfile, "display_name" | "full_name" | "email">) {
   return (
@@ -53,6 +54,16 @@ export async function requireAdminProfile() {
 
   if (profile.role !== "admin" || profile.status !== "active") {
     throw new Error("Nur Admins können diese Einstellung ändern.");
+  }
+
+  return profile;
+}
+
+export async function requireValuePropsProfile() {
+  const profile = await getCurrentProfile();
+
+  if (profile.status !== "active" || !profile.can_manage_value_props) {
+    throw new Error("Nur User mit Value-Props-Recht können diese Einstellung ändern.");
   }
 
   return profile;

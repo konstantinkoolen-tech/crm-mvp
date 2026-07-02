@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2 } from "lucide-react";
+import { Building2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CompanyCreateModalButton } from "@/components/crm/company-create-modal-button";
@@ -32,10 +32,23 @@ import { companyStatusLabels } from "@/lib/companies/status";
 import type { CompanyWithOwner } from "@/lib/db/companies";
 import type { DealWithCompany } from "@/lib/db/deals";
 import type { TeamProfile } from "@/lib/db/profiles";
-import { dealStages } from "@/lib/deals/constants";
+import { dealStageLabels, dealStages } from "@/lib/deals/constants";
 import { ownerDisplayName } from "@/lib/list-display";
+import { cn } from "@/lib/utils";
 
 type CompanySort = "updated_desc" | "name_asc" | "employees_desc" | "created_desc";
+type CompanyHeaderSortKey =
+  | "name"
+  | "industry"
+  | "status"
+  | "dealStatus"
+  | "owner"
+  | "employees";
+type SortDirection = "asc" | "desc";
+type CompanyHeaderSort = {
+  direction: SortDirection;
+  key: CompanyHeaderSortKey;
+};
 
 export function CompanyList({
   companies,
@@ -49,6 +62,7 @@ export function CompanyList({
   teamProfiles: TeamProfile[];
 }) {
   const [sort, setSort] = useState<CompanySort>("updated_desc");
+  const [headerSort, setHeaderSort] = useState<CompanyHeaderSort | null>(null);
   const [owner, setOwner] = useState("all");
   const [status, setStatus] = useState("all");
 
@@ -69,6 +83,9 @@ export function CompanyList({
       .filter((company) => owner === "all" || company.owner_id === owner)
       .filter((company) => status === "all" || company.status === status)
       .sort((a, b) => {
+        if (headerSort) {
+          return compareHeaderSort(a, b, headerSort, dealsByCompany);
+        }
         if (sort === "name_asc") {
           return a.name.localeCompare(b.name);
         }
@@ -83,7 +100,30 @@ export function CompanyList({
         }
         return dateValue(b.updated_at) - dateValue(a.updated_at);
       });
-  }, [companies, owner, sort, status]);
+  }, [companies, dealsByCompany, headerSort, owner, sort, status]);
+
+  function handleSortChange(value: string) {
+    setSort(value as CompanySort);
+    setHeaderSort(null);
+  }
+
+  function toggleHeaderSort(key: CompanyHeaderSortKey) {
+    setHeaderSort((currentSort) => {
+      if (currentSort?.key !== key) {
+        return { key, direction: "asc" };
+      }
+
+      return {
+        key,
+        direction: currentSort.direction === "asc" ? "desc" : "asc",
+      };
+    });
+  }
+
+  function resetHeaderSort() {
+    setHeaderSort(null);
+    setSort("updated_desc");
+  }
 
   if (companies.length === 0) {
     return (
@@ -128,7 +168,7 @@ export function CompanyList({
             { value: "employees_desc", label: "Mitarbeiter absteigend" },
             { value: "created_desc", label: "Erstellt zuletzt" },
           ]}
-          onSortChange={(value) => setSort(value as CompanySort)}
+          onSortChange={handleSortChange}
           ownerValue={owner}
           ownerOptions={ownerOptions}
           onOwnerChange={setOwner}
@@ -138,17 +178,59 @@ export function CompanyList({
             label,
           }))}
           onStatusChange={setStatus}
-        />
+        >
+          {headerSort ? (
+            <button
+              aria-label="Kopfzeilen-Sortierung zurücksetzen"
+              className="inline-flex size-8 items-center justify-center rounded-md bg-neutral-100 text-neutral-500 transition hover:bg-neutral-200 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
+              onClick={resetHeaderSort}
+              title="Kopfzeilen-Sortierung zurücksetzen"
+              type="button"
+            >
+              <Trash2 className="size-4" aria-hidden="true" />
+            </button>
+          ) : null}
+        </ListFilterBar>
 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Branche</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Deal-Status</TableHead>
-              <TableHead>Zuständig</TableHead>
-              <TableHead>Mitarbeiter</TableHead>
+              <SortableCompanyHead
+                activeSort={headerSort}
+                label="Name"
+                sortKey="name"
+                onSort={toggleHeaderSort}
+              />
+              <SortableCompanyHead
+                activeSort={headerSort}
+                label="Branche"
+                sortKey="industry"
+                onSort={toggleHeaderSort}
+              />
+              <SortableCompanyHead
+                activeSort={headerSort}
+                label="Status"
+                sortKey="status"
+                onSort={toggleHeaderSort}
+              />
+              <SortableCompanyHead
+                activeSort={headerSort}
+                label="Deal-Status"
+                sortKey="dealStatus"
+                onSort={toggleHeaderSort}
+              />
+              <SortableCompanyHead
+                activeSort={headerSort}
+                label="Zuständig"
+                sortKey="owner"
+                onSort={toggleHeaderSort}
+              />
+              <SortableCompanyHead
+                activeSort={headerSort}
+                label="Mitarbeiter"
+                sortKey="employees"
+                onSort={toggleHeaderSort}
+              />
               <TableHead className="text-right">Aktionen</TableHead>
             </TableRow>
           </TableHeader>
@@ -198,13 +280,53 @@ export function CompanyList({
   );
 }
 
+function SortableCompanyHead({
+  activeSort,
+  label,
+  onSort,
+  sortKey,
+}: {
+  activeSort: CompanyHeaderSort | null;
+  label: string;
+  onSort: (key: CompanyHeaderSortKey) => void;
+  sortKey: CompanyHeaderSortKey;
+}) {
+  const isActive = activeSort?.key === sortKey;
+  const nextDirectionLabel =
+    isActive && activeSort.direction === "asc" ? "Z-A" : "A-Z";
+
+  return (
+    <TableHead
+      aria-sort={
+        isActive
+          ? activeSort.direction === "asc"
+            ? "ascending"
+            : "descending"
+          : "none"
+      }
+    >
+      <button
+        aria-label={`${label} ${nextDirectionLabel} sortieren`}
+        className={cn(
+          "inline-flex h-8 items-center gap-1.5 rounded-md px-0 text-left text-sm font-medium transition hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20",
+          isActive ? "text-neutral-950" : "text-neutral-500",
+        )}
+        onClick={() => onSort(sortKey)}
+        type="button"
+      >
+        <span>{label}</span>
+        {isActive ? (
+          <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[11px] font-semibold text-neutral-700">
+            {activeSort.direction === "asc" ? "A-Z" : "Z-A"}
+          </span>
+        ) : null}
+      </button>
+    </TableHead>
+  );
+}
+
 function CompanyDealStatus({ deals }: { deals: DealWithCompany[] }) {
-  const stageCounts = dealStages
-    .map((stage) => ({
-      stage,
-      count: deals.filter((deal) => deal.stage === stage).length,
-    }))
-    .filter((stage) => stage.count > 0);
+  const stageCounts = companyDealStageCounts(deals);
 
   if (stageCounts.length === 0) {
     return (
@@ -234,6 +356,100 @@ function CompanyDealStatus({ deals }: { deals: DealWithCompany[] }) {
       ))}
     </Link>
   );
+}
+
+function compareHeaderSort(
+  a: CompanyWithOwner,
+  b: CompanyWithOwner,
+  headerSort: CompanyHeaderSort,
+  dealsByCompany: Record<string, DealWithCompany[]>,
+) {
+  return compareText(
+    companyHeaderSortValue(a, headerSort.key, dealsByCompany),
+    companyHeaderSortValue(b, headerSort.key, dealsByCompany),
+    headerSort.direction,
+  );
+}
+
+function companyHeaderSortValue(
+  company: CompanyWithOwner,
+  key: CompanyHeaderSortKey,
+  dealsByCompany: Record<string, DealWithCompany[]>,
+) {
+  if (key === "name") {
+    return company.name;
+  }
+
+  if (key === "industry") {
+    return company.industry;
+  }
+
+  if (key === "status") {
+    return companyStatusLabels[company.status];
+  }
+
+  if (key === "dealStatus") {
+    return companyDealStatusText(dealsByCompany[company.id] ?? []);
+  }
+
+  if (key === "owner") {
+    return ownerDisplayName(company.owner);
+  }
+
+  return employeeCountFromValue(company.employee_count);
+}
+
+function compareText(
+  a: string | null | undefined,
+  b: string | null | undefined,
+  direction: SortDirection,
+) {
+  const normalizedA = a?.trim() ?? "";
+  const normalizedB = b?.trim() ?? "";
+  const aMissing = normalizedA.length === 0;
+  const bMissing = normalizedB.length === 0;
+
+  if (aMissing && bMissing) {
+    return 0;
+  }
+
+  if (aMissing) {
+    return 1;
+  }
+
+  if (bMissing) {
+    return -1;
+  }
+
+  const comparison = normalizedA.localeCompare(normalizedB, "de", {
+    numeric: true,
+    sensitivity: "base",
+  });
+
+  return direction === "asc" ? comparison : -comparison;
+}
+
+function companyDealStatusText(deals: DealWithCompany[]) {
+  const stageCounts = companyDealStageCounts(deals);
+
+  if (stageCounts.length === 0) {
+    return "Keine Deals";
+  }
+
+  return stageCounts
+    .map(({ count, stage }) =>
+      count > 1 ? `${dealStageLabels[stage]} ${count}` : dealStageLabels[stage],
+    )
+    .join(" ");
+}
+
+function companyDealStageCounts(deals: DealWithCompany[]) {
+  return dealStages
+    .map((stage) => ({
+      stage,
+      count: deals.filter((deal) => deal.stage === stage).length,
+    }))
+    .filter((stage) => stage.count > 0);
 }
 
 function dateValue(value: string) {

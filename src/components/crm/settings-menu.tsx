@@ -5,6 +5,7 @@ import {
   Plug,
   Settings,
   SlidersHorizontal,
+  Tags,
   UserCog,
   Users,
 } from "lucide-react";
@@ -13,6 +14,7 @@ import { useState } from "react";
 import { LogoutButton } from "@/components/crm/logout-button";
 
 type SettingsMenuProps = {
+  canManageValueProps?: boolean;
   userEmail?: string | null;
 };
 
@@ -22,6 +24,13 @@ const settingsLinks = [
     label: "User Verwaltung",
     description: "Team, Rollen und Rechte",
     icon: Users,
+  },
+  {
+    href: "/settings/value-props",
+    label: "Value Props",
+    description: "Argumente und Auswahl verwalten",
+    icon: Tags,
+    permission: "value_props",
   },
   {
     href: "/settings/operations",
@@ -37,8 +46,14 @@ const settingsLinks = [
   },
 ];
 
-export function SettingsMenu({ userEmail }: SettingsMenuProps) {
+export function SettingsMenu({
+  canManageValueProps = false,
+  userEmail,
+}: SettingsMenuProps) {
   const [open, setOpen] = useState(false);
+  const visibleSettingsLinks = settingsLinks.filter(
+    (item) => item.permission !== "value_props" || canManageValueProps,
+  );
 
   return (
     <div className="relative">
@@ -49,7 +64,7 @@ export function SettingsMenu({ userEmail }: SettingsMenuProps) {
             <span className="truncate">{userEmail ?? "Angemeldet"}</span>
           </div>
           <div className="my-1 border-t border-neutral-200" />
-          {settingsLinks.map((item) => {
+          {visibleSettingsLinks.map((item) => {
             const Icon = item.icon;
 
             return (

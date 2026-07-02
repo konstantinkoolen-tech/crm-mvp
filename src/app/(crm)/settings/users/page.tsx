@@ -55,6 +55,10 @@ const permissionFields = [
     name: "can_manage_settings",
     label: "Kann Einstellungen verwalten",
   },
+  {
+    name: "can_manage_value_props",
+    label: "Value Props",
+  },
 ] as const;
 
 export default async function UsersSettingsPage({

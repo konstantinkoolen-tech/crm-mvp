@@ -36,5 +36,6 @@ export async function ensureProfile(
     can_delete_companies: isInitialAdmin,
     can_manage_users: isInitialAdmin,
     can_manage_settings: isInitialAdmin,
+    can_manage_value_props: isInitialAdmin,
   });
 }
