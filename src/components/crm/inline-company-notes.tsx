@@ -73,7 +73,7 @@ export function InlineCompanyNotes({
   }, [updateHiddenTextState]);
 
   function saveNotes() {
-    const nextNotes = notes.trim();
+    const nextNotes = (textareaRef.current?.value ?? notes).trim();
 
     if (nextNotes === savedNotes.current.trim()) {
       return;

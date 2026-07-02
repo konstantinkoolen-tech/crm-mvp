@@ -2,20 +2,23 @@
 
 import {
   forwardRef,
+  type ClipboardEvent,
   type ComponentPropsWithoutRef,
   type FocusEvent,
   type KeyboardEvent,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 type RichTextTextareaProps = ComponentPropsWithoutRef<"textarea"> & {
   wrapperClassName?: string;
 };
+
+type FormatCommand = "bold" | "italic" | "ordered" | "quote" | "unordered";
 
 const fallbackSelection = "Text";
 const shortcutHoldDelayMs = 550;
@@ -26,6 +29,10 @@ const shortcutHelp = [
   ["⌘ ⇧ 7", "Nummerierte Liste"],
   ["⌘ ⇧ 9", "Zitat"],
 ];
+const unorderedListPattern = /^[-*]\s+(.+)$/;
+const orderedListPattern = /^\d+[.)]\s+(.+)$/;
+const quotePattern = /^>\s?(.*)$/;
+const inlinePattern = /(\*\*[^*]+\*\*|__[^_]+__|_[^_\n]+_|\*[^*\n]+\*)/g;
 const inputEventOptions = {
   bubbles: true,
   inputType: "insertText",
@@ -37,20 +44,53 @@ export const RichTextTextarea = forwardRef<
 >(function RichTextTextarea(
   {
     className,
+    defaultValue,
+    disabled,
+    id,
+    maxLength,
+    name,
     onBlur,
+    onChange,
     onFocus,
     onKeyDown,
     onKeyUp,
+    placeholder,
+    readOnly,
+    required: _required,
+    rows,
+    value,
     wrapperClassName,
     ...textareaProps
   },
   forwardedRef,
 ) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const hiddenTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const shortcutHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isControlled = value !== undefined;
+  const controlledMarkdown = valueToString(value);
+  const [markdown, setMarkdown] = useState(() =>
+    isControlled ? controlledMarkdown : valueToString(defaultValue),
+  );
   const [showShortcutHint, setShowShortcutHint] = useState(false);
 
-  useImperativeHandle(forwardedRef, () => textareaRef.current as HTMLTextAreaElement);
+  useImperativeHandle(
+    forwardedRef,
+    () => hiddenTextareaRef.current as HTMLTextAreaElement,
+  );
+
+  useLayoutEffect(() => {
+    syncEditorFromMarkdown(markdown);
+  }, []);
+
+  useEffect(() => {
+    if (!isControlled || controlledMarkdown === markdown) {
+      return;
+    }
+
+    setMarkdown(controlledMarkdown);
+    syncEditorFromMarkdown(controlledMarkdown);
+  }, [controlledMarkdown, isControlled, markdown]);
 
   useEffect(() => {
     return () => {
@@ -60,78 +100,63 @@ export const RichTextTextarea = forwardRef<
     };
   }, []);
 
-  function applyInline(marker: "**" | "_") {
-    updateTextarea((value, start, end) => {
-      const selected = value.slice(start, end) || fallbackSelection;
-      const nextSelectionStart = start + marker.length;
-      const nextSelectionEnd = nextSelectionStart + selected.length;
+  function syncEditorFromMarkdown(nextMarkdown: string) {
+    const editor = editorRef.current;
 
-      return {
-        nextSelectionEnd,
-        nextSelectionStart,
-        value:
-          value.slice(0, start) +
-          marker +
-          selected +
-          marker +
-          value.slice(end),
-      };
-    });
-  }
-
-  function applyBlock(type: "ordered" | "quote" | "unordered") {
-    updateTextarea((value, start, end) => {
-      const lineStart = value.lastIndexOf("\n", start - 1) + 1;
-      const lineEnd = end + value.slice(end).search(/\n|$/);
-      const selectionEnd = lineEnd < end ? end : lineEnd;
-      const selected = value.slice(lineStart, selectionEnd);
-      const lines = (selected || fallbackSelection).split("\n");
-      const formatted = lines
-        .map((line, index) => formatBlockLine(line, type, index))
-        .join("\n");
-
-      return {
-        nextSelectionEnd: lineStart + formatted.length,
-        nextSelectionStart: lineStart,
-        value: value.slice(0, lineStart) + formatted + value.slice(selectionEnd),
-      };
-    });
-  }
-
-  function updateTextarea(
-    formatter: (
-      value: string,
-      start: number,
-      end: number,
-    ) => {
-      nextSelectionEnd: number;
-      nextSelectionStart: number;
-      value: string;
-    },
-  ) {
-    const textarea = textareaRef.current;
-
-    if (!textarea || textarea.disabled || textarea.readOnly) {
+    if (!editor || document.activeElement === editor) {
       return;
     }
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const result = formatter(textarea.value, start, end);
+    editor.innerHTML = markdownToEditorHtml(nextMarkdown);
+  }
 
-    setNativeTextareaValue(textarea, result.value);
-    textarea.focus();
-    textarea.setSelectionRange(result.nextSelectionStart, result.nextSelectionEnd);
+  function syncMarkdownFromEditor() {
+    const editor = editorRef.current;
+
+    if (!editor) {
+      return;
+    }
+
+    const nextMarkdown = editorToMarkdown(editor);
+    updateStoredMarkdown(nextMarkdown);
+  }
+
+  function updateStoredMarkdown(nextMarkdown: string) {
+    setMarkdown(nextMarkdown);
+
+    const textarea = hiddenTextareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    setNativeTextareaValue(textarea, nextMarkdown);
     dispatchTextareaInput(textarea);
+  }
 
-    requestAnimationFrame(() => {
-      if (document.activeElement === textarea) {
-        textarea.setSelectionRange(
-          result.nextSelectionStart,
-          result.nextSelectionEnd,
-        );
-      }
-    });
+  function applyFormat(command: FormatCommand) {
+    const editor = editorRef.current;
+
+    if (!editor || disabled || readOnly) {
+      return;
+    }
+
+    editor.focus();
+    ensureSelection(editor);
+
+    if (command === "bold") {
+      document.execCommand("bold");
+    } else if (command === "italic") {
+      document.execCommand("italic");
+    } else if (command === "unordered") {
+      document.execCommand("insertUnorderedList");
+    } else if (command === "ordered") {
+      document.execCommand("insertOrderedList");
+    } else {
+      document.execCommand("formatBlock", false, "blockquote");
+    }
+
+    syncMarkdownFromEditor();
   }
 
   function scheduleShortcutHint() {
@@ -154,14 +179,28 @@ export const RichTextTextarea = forwardRef<
     setShowShortcutHint(false);
   }
 
-  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    onKeyDown?.(event);
+  function handleInput() {
+    syncMarkdownFromEditor();
+  }
 
-    if (
-      event.defaultPrevented ||
-      textareaProps.disabled ||
-      textareaProps.readOnly
-    ) {
+  function handlePaste(event: ClipboardEvent<HTMLDivElement>) {
+    event.preventDefault();
+
+    if (disabled || readOnly) {
+      return;
+    }
+
+    const text = event.clipboardData.getData("text/plain");
+    document.execCommand("insertText", false, text);
+    syncMarkdownFromEditor();
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    (onKeyDown as ((event: KeyboardEvent<HTMLDivElement>) => void) | undefined)?.(
+      event,
+    );
+
+    if (event.defaultPrevented || disabled || readOnly) {
       return;
     }
 
@@ -182,52 +221,59 @@ export const RichTextTextarea = forwardRef<
     if (key === "b" && !event.shiftKey && !event.altKey) {
       event.preventDefault();
       clearShortcutHint();
-      applyInline("**");
+      applyFormat("bold");
       return;
     }
 
     if (key === "i" && !event.shiftKey && !event.altKey) {
       event.preventDefault();
       clearShortcutHint();
-      applyInline("_");
+      applyFormat("italic");
       return;
     }
 
     if (event.shiftKey && !event.altKey && event.code === "Digit8") {
       event.preventDefault();
       clearShortcutHint();
-      applyBlock("unordered");
+      applyFormat("unordered");
       return;
     }
 
     if (event.shiftKey && !event.altKey && event.code === "Digit7") {
       event.preventDefault();
       clearShortcutHint();
-      applyBlock("ordered");
+      applyFormat("ordered");
       return;
     }
 
     if (event.shiftKey && !event.altKey && event.code === "Digit9") {
       event.preventDefault();
       clearShortcutHint();
-      applyBlock("quote");
+      applyFormat("quote");
     }
   }
 
-  function handleKeyUp(event: KeyboardEvent<HTMLTextAreaElement>) {
-    onKeyUp?.(event);
+  function handleKeyUp(event: KeyboardEvent<HTMLDivElement>) {
+    (onKeyUp as ((event: KeyboardEvent<HTMLDivElement>) => void) | undefined)?.(
+      event,
+    );
 
     if (event.key === "Meta" || event.key === "Control") {
       clearShortcutHint();
     }
   }
 
-  function handleFocus(event: FocusEvent<HTMLTextAreaElement>) {
-    onFocus?.(event);
+  function handleFocus(event: FocusEvent<HTMLDivElement>) {
+    (onFocus as ((event: FocusEvent<HTMLDivElement>) => void) | undefined)?.(
+      event,
+    );
   }
 
-  function handleBlur(event: FocusEvent<HTMLTextAreaElement>) {
-    onBlur?.(event);
+  function handleBlur(event: FocusEvent<HTMLDivElement>) {
+    syncMarkdownFromEditor();
+    (onBlur as ((event: FocusEvent<HTMLDivElement>) => void) | undefined)?.(
+      event,
+    );
     clearShortcutHint();
   }
 
@@ -238,18 +284,49 @@ export const RichTextTextarea = forwardRef<
         wrapperClassName,
       )}
     >
-      <Textarea
+      <textarea
         {...textareaProps}
-        ref={textareaRef}
-        onBlur={handleBlur}
-        onFocus={handleFocus}
-        onKeyDown={handleKeyDown}
-        onKeyUp={handleKeyUp}
+        ref={hiddenTextareaRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute size-px opacity-0"
+        disabled={disabled}
+        maxLength={maxLength}
+        name={name}
+        onChange={onChange}
+        readOnly={!onChange}
+        tabIndex={-1}
+        value={markdown}
+      />
+      <div
+        aria-disabled={disabled || undefined}
+        aria-label={textareaProps["aria-label"] ?? placeholder ?? "Text"}
+        aria-multiline="true"
         className={cn(
-          "rounded-md border-0 shadow-none focus-visible:ring-0",
+          "min-h-24 w-full overflow-auto rounded-md bg-white px-3 py-2 text-sm leading-6 text-neutral-950 outline-none transition empty:before:text-neutral-400 disabled:cursor-not-allowed disabled:opacity-50",
+          disabled || readOnly ? "cursor-not-allowed opacity-50" : "",
           className,
         )}
+        contentEditable={!disabled && !readOnly}
+        data-placeholder={placeholder}
+        id={id}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        onInput={handleInput}
+        onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
+        onPaste={handlePaste}
+        ref={editorRef}
+        role="textbox"
+        style={{
+          minHeight: `${Math.max(Number(rows ?? 4), 3) * 1.5 + 1}rem`,
+        }}
+        suppressContentEditableWarning
       />
+      {!markdown.trim() && placeholder ? (
+        <span className="pointer-events-none absolute left-3 top-2 text-sm leading-6 text-neutral-400">
+          {placeholder}
+        </span>
+      ) : null}
       {showShortcutHint ? (
         <div className="pointer-events-none absolute bottom-2 right-2 z-10 rounded-md border border-neutral-200 bg-white/95 px-2.5 py-2 text-[11px] text-neutral-600 shadow-lg">
           <p className="mb-1 font-semibold text-neutral-900">Shortcuts</p>
@@ -267,26 +344,198 @@ export const RichTextTextarea = forwardRef<
   );
 });
 
-function formatBlockLine(
-  line: string,
-  type: "ordered" | "quote" | "unordered",
-  index: number,
-) {
-  const content = stripBlockPrefix(line);
-
-  if (type === "ordered") {
-    return `${index + 1}. ${content}`;
+function valueToString(value: RichTextTextareaProps["value"] | undefined) {
+  if (Array.isArray(value)) {
+    return value.join("\n");
   }
 
-  if (type === "quote") {
-    return `> ${content}`;
-  }
-
-  return `- ${content}`;
+  return value === null || value === undefined ? "" : String(value);
 }
 
-function stripBlockPrefix(line: string) {
-  return line.replace(/^(\s*)([-*]\s+|\d+[.)]\s+|>\s?)/, "$1").trimStart();
+function markdownToEditorHtml(value: string) {
+  const lines = value.replace(/\r\n?/g, "\n").split("\n");
+  const html: string[] = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const unorderedMatch = line.match(unorderedListPattern);
+    const orderedMatch = line.match(orderedListPattern);
+    const quoteMatch = line.match(quotePattern);
+
+    if (!line.trim()) {
+      html.push("<div><br></div>");
+      continue;
+    }
+
+    if (unorderedMatch) {
+      const items: string[] = [];
+      while (index < lines.length) {
+        const match = lines[index].match(unorderedListPattern);
+        if (!match) {
+          break;
+        }
+        items.push(`<li>${formatMarkdownInline(match[1])}</li>`);
+        index += 1;
+      }
+      index -= 1;
+      html.push(`<ul>${items.join("")}</ul>`);
+      continue;
+    }
+
+    if (orderedMatch) {
+      const items: string[] = [];
+      while (index < lines.length) {
+        const match = lines[index].match(orderedListPattern);
+        if (!match) {
+          break;
+        }
+        items.push(`<li>${formatMarkdownInline(match[1])}</li>`);
+        index += 1;
+      }
+      index -= 1;
+      html.push(`<ol>${items.join("")}</ol>`);
+      continue;
+    }
+
+    if (quoteMatch) {
+      const quoteLines: string[] = [];
+      while (index < lines.length) {
+        const match = lines[index].match(quotePattern);
+        if (!match) {
+          break;
+        }
+        quoteLines.push(`<div>${formatMarkdownInline(match[1])}</div>`);
+        index += 1;
+      }
+      index -= 1;
+      html.push(`<blockquote>${quoteLines.join("")}</blockquote>`);
+      continue;
+    }
+
+    html.push(`<div>${formatMarkdownInline(line)}</div>`);
+  }
+
+  return html.join("");
+}
+
+function formatMarkdownInline(value: string) {
+  return value
+    .split(inlinePattern)
+    .filter(Boolean)
+    .map((part) => {
+      if (
+        (part.startsWith("**") && part.endsWith("**")) ||
+        (part.startsWith("__") && part.endsWith("__"))
+      ) {
+        return `<strong>${escapeHtml(part.slice(2, -2))}</strong>`;
+      }
+
+      if (
+        (part.startsWith("_") && part.endsWith("_")) ||
+        (part.startsWith("*") && part.endsWith("*"))
+      ) {
+        return `<em>${escapeHtml(part.slice(1, -1))}</em>`;
+      }
+
+      return escapeHtml(part);
+    })
+    .join("");
+}
+
+function editorToMarkdown(editor: HTMLElement) {
+  const lines = Array.from(editor.childNodes).flatMap((node) =>
+    nodeToMarkdownLines(node),
+  );
+
+  return normalizeMarkdown(lines.join("\n"));
+}
+
+function nodeToMarkdownLines(node: ChildNode): string[] {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return [node.textContent ?? ""];
+  }
+
+  if (!(node instanceof HTMLElement)) {
+    return [];
+  }
+
+  if (node.tagName === "BR") {
+    return [""];
+  }
+
+  if (node.tagName === "UL") {
+    return Array.from(node.children).map((child) => `- ${inlineMarkdown(child)}`);
+  }
+
+  if (node.tagName === "OL") {
+    return Array.from(node.children).map(
+      (child, index) => `${index + 1}. ${inlineMarkdown(child)}`,
+    );
+  }
+
+  if (node.tagName === "BLOCKQUOTE") {
+    const lines = Array.from(node.childNodes).flatMap((child) =>
+      nodeToMarkdownLines(child),
+    );
+    return lines.map((line) => `> ${line}`);
+  }
+
+  return [inlineMarkdown(node)];
+}
+
+function inlineMarkdown(node: ChildNode): string {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return node.textContent ?? "";
+  }
+
+  if (!(node instanceof HTMLElement)) {
+    return "";
+  }
+
+  if (node.tagName === "BR") {
+    return "\n";
+  }
+
+  const content = Array.from(node.childNodes).map(inlineMarkdown).join("");
+
+  if (node.tagName === "B" || node.tagName === "STRONG") {
+    return content ? `**${content}**` : "";
+  }
+
+  if (node.tagName === "EM" || node.tagName === "I") {
+    return content ? `_${content}_` : "";
+  }
+
+  return content;
+}
+
+function normalizeMarkdown(value: string) {
+  return value
+    .replace(/\u00a0/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trimEnd();
+}
+
+function ensureSelection(editor: HTMLElement) {
+  const selection = window.getSelection();
+
+  if (!selection || selection.rangeCount > 0) {
+    return;
+  }
+
+  const range = document.createRange();
+
+  if (!editor.textContent?.trim()) {
+    editor.textContent = fallbackSelection;
+    range.selectNodeContents(editor);
+  } else {
+    range.selectNodeContents(editor);
+    range.collapse(false);
+  }
+
+  selection.removeAllRanges();
+  selection.addRange(range);
 }
 
 function setNativeTextareaValue(textarea: HTMLTextAreaElement, value: string) {
@@ -311,4 +560,13 @@ function dispatchTextareaInput(textarea: HTMLTextAreaElement) {
   }
 
   textarea.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
