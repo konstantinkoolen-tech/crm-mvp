@@ -6,6 +6,7 @@ import {
   type ComponentPropsWithoutRef,
   type FocusEvent,
   type KeyboardEvent,
+  type MouseEvent,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
@@ -19,12 +20,17 @@ type RichTextTextareaProps = ComponentPropsWithoutRef<"textarea"> & {
 };
 
 type FormatCommand = "bold" | "italic" | "ordered" | "quote" | "unordered";
+type LinkDraft = {
+  text: string;
+  url: string;
+};
 
 const fallbackSelection = "Text";
 const shortcutHoldDelayMs = 550;
 const shortcutHelp = [
   ["⌘ B", "Fett"],
   ["⌘ I", "Kursiv"],
+  ["⌘ K", "Link"],
   ["- Space", "Bullet points"],
   ["1. Space", "Nummerierte Liste"],
   ["⌘ ⇧ 9", "Zitat für Markierung"],
@@ -32,7 +38,10 @@ const shortcutHelp = [
 const unorderedListPattern = /^[-*]\s+(.+)$/;
 const orderedListPattern = /^\d+[.)]\s+(.+)$/;
 const quotePattern = /^>\s?(.*)$/;
-const inlinePattern = /(\*\*[^*]+\*\*|__[^_]+__|_[^_\n]+_|\*[^*\n]+\*)/g;
+const markdownLinkPattern = /^\[([^\]\n]+)\]\(([^)\s]+)\)$/;
+const rawUrlPattern = /^(https?:\/\/[^\s<>()]+|www\.[^\s<>()]+)$/i;
+const inlinePattern =
+  /(\[[^\]\n]+\]\([^)]+\)|\*\*[^*]+\*\*|__[^_]+__|_[^_\n]+_|\*[^*\n]+\*|https?:\/\/[^\s<>()]+|www\.[^\s<>()]+)/gi;
 const inputEventOptions = {
   bubbles: true,
   inputType: "insertText",
@@ -66,12 +75,17 @@ export const RichTextTextarea = forwardRef<
 ) {
   const hiddenTextareaRef = useRef<HTMLTextAreaElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+  const linkTextInputRef = useRef<HTMLInputElement>(null);
+  const savedLinkRangeRef = useRef<Range | null>(null);
+  const selectedAnchorRef = useRef<HTMLAnchorElement | null>(null);
   const shortcutHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isControlled = value !== undefined;
   const controlledMarkdown = valueToString(value);
   const [markdown, setMarkdown] = useState(() =>
     isControlled ? controlledMarkdown : valueToString(defaultValue),
   );
+  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+  const [linkDraft, setLinkDraft] = useState<LinkDraft>({ text: "", url: "" });
   const [showShortcutHint, setShowShortcutHint] = useState(false);
 
   useImperativeHandle(
@@ -166,6 +180,72 @@ export const RichTextTextarea = forwardRef<
     syncMarkdownFromEditor();
   }
 
+  function openLinkDialog() {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+
+    if (!editor || disabled || readOnly || !selection || selection.rangeCount === 0) {
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+
+    if (!rangeBelongsToEditor(editor, range)) {
+      return;
+    }
+
+    const selectedAnchor = getSelectedAnchor(editor);
+    const selectedText = selection.toString().trim();
+
+    selectedAnchorRef.current = selectedAnchor;
+    savedLinkRangeRef.current = range.cloneRange();
+    setLinkDraft({
+      text: selectedAnchor?.textContent?.trim() || selectedText,
+      url: selectedAnchor?.getAttribute("href") ?? "",
+    });
+    setIsLinkDialogOpen(true);
+
+    requestAnimationFrame(() => {
+      linkTextInputRef.current?.focus();
+      linkTextInputRef.current?.select();
+    });
+  }
+
+  function closeLinkDialog() {
+    setIsLinkDialogOpen(false);
+    setLinkDraft({ text: "", url: "" });
+    selectedAnchorRef.current = null;
+    savedLinkRangeRef.current = null;
+  }
+
+  function applyLink() {
+    const editor = editorRef.current;
+    const href = normalizeHref(linkDraft.url);
+    const label = linkDraft.text.trim() || linkDraft.url.trim();
+
+    if (!editor || !href || !label) {
+      return;
+    }
+
+    editor.focus();
+
+    if (selectedAnchorRef.current && editor.contains(selectedAnchorRef.current)) {
+      selectedAnchorRef.current.textContent = label;
+      setAnchorHref(selectedAnchorRef.current, href);
+    } else {
+      const range = savedRangeForEditor(editor, savedLinkRangeRef.current);
+
+      if (range) {
+        insertAnchorAtRange(range, label, href);
+      } else {
+        insertAnchorAtCurrentSelection(label, href);
+      }
+    }
+
+    syncMarkdownFromEditor();
+    closeLinkDialog();
+  }
+
   function scheduleShortcutHint() {
     if (shortcutHintTimerRef.current || showShortcutHint) {
       return;
@@ -198,6 +278,17 @@ export const RichTextTextarea = forwardRef<
     }
 
     const text = event.clipboardData.getData("text/plain");
+
+    if (isUrlLike(text.trim()) && text.trim() === text) {
+      const href = normalizeHref(text);
+
+      if (href) {
+        insertAnchorAtCurrentSelection(text, href);
+        syncMarkdownFromEditor();
+        return;
+      }
+    }
+
     document.execCommand("insertText", false, text);
     syncMarkdownFromEditor();
   }
@@ -254,6 +345,13 @@ export const RichTextTextarea = forwardRef<
       return;
     }
 
+    if (key === "k" && !event.shiftKey && !event.altKey) {
+      event.preventDefault();
+      clearShortcutHint();
+      openLinkDialog();
+      return;
+    }
+
     if (event.shiftKey && !event.altKey && event.code === "Digit8") {
       event.preventDefault();
       clearShortcutHint();
@@ -299,6 +397,31 @@ export const RichTextTextarea = forwardRef<
     clearShortcutHint();
   }
 
+  function handleEditorClick(event: MouseEvent<HTMLDivElement>) {
+    const target = event.target instanceof Element ? event.target : null;
+    const anchor = target?.closest("a");
+
+    if (!anchor || !(event.metaKey || event.ctrlKey)) {
+      return;
+    }
+
+    event.preventDefault();
+    window.open(anchor.href, "_blank", "noopener,noreferrer");
+  }
+
+  function handleLinkDialogKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      applyLink();
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeLinkDialog();
+    }
+  }
+
   return (
     <div
       className={cn(
@@ -324,7 +447,7 @@ export const RichTextTextarea = forwardRef<
         aria-label={textareaProps["aria-label"] ?? placeholder ?? "Text"}
         aria-multiline="true"
         className={cn(
-          "min-h-24 w-full overflow-auto rounded-md bg-white px-3 py-2 text-sm leading-6 text-neutral-950 outline-none transition empty:before:text-neutral-400 disabled:cursor-not-allowed disabled:opacity-50 [&_blockquote]:border-l-2 [&_blockquote]:border-neutral-300 [&_blockquote]:pl-3 [&_blockquote]:text-neutral-600 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5",
+          "min-h-24 w-full overflow-auto rounded-md bg-white px-3 py-2 text-sm leading-6 text-neutral-950 outline-none transition empty:before:text-neutral-400 disabled:cursor-not-allowed disabled:opacity-50 [&_a]:font-medium [&_a]:text-neutral-950 [&_a]:underline [&_a]:decoration-neutral-300 [&_a]:underline-offset-2 [&_a:hover]:decoration-neutral-950 [&_blockquote]:border-l-2 [&_blockquote]:border-neutral-300 [&_blockquote]:pl-3 [&_blockquote]:text-neutral-600 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5",
           disabled || readOnly ? "cursor-not-allowed opacity-50" : "",
           className,
         )}
@@ -332,6 +455,7 @@ export const RichTextTextarea = forwardRef<
         data-placeholder={placeholder}
         id={id}
         onBlur={handleBlur}
+        onClick={handleEditorClick}
         onFocus={handleFocus}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
@@ -348,6 +472,60 @@ export const RichTextTextarea = forwardRef<
         <span className="pointer-events-none absolute left-3 top-2 text-sm leading-6 text-neutral-400">
           {placeholder}
         </span>
+      ) : null}
+      {isLinkDialogOpen ? (
+        <div className="absolute bottom-2 left-2 right-2 z-20 rounded-md border border-neutral-200 bg-white p-3 text-sm shadow-lg">
+          <div className="grid gap-2 sm:grid-cols-[1fr_1.2fr_auto]">
+            <label className="grid gap-1">
+              <span className="text-xs font-medium text-neutral-500">
+                Anzeigename
+              </span>
+              <input
+                ref={linkTextInputRef}
+                className="h-9 rounded-md border border-neutral-200 px-2 text-sm outline-none transition focus:border-neutral-300 focus:ring-2 focus:ring-neutral-950/10"
+                value={linkDraft.text}
+                onChange={(event) =>
+                  setLinkDraft((current) => ({
+                    ...current,
+                    text: event.target.value,
+                  }))
+                }
+                onKeyDown={handleLinkDialogKeyDown}
+              />
+            </label>
+            <label className="grid gap-1">
+              <span className="text-xs font-medium text-neutral-500">Link</span>
+              <input
+                className="h-9 rounded-md border border-neutral-200 px-2 text-sm outline-none transition focus:border-neutral-300 focus:ring-2 focus:ring-neutral-950/10"
+                placeholder="https://..."
+                value={linkDraft.url}
+                onChange={(event) =>
+                  setLinkDraft((current) => ({
+                    ...current,
+                    url: event.target.value,
+                  }))
+                }
+                onKeyDown={handleLinkDialogKeyDown}
+              />
+            </label>
+            <div className="flex items-end gap-2">
+              <button
+                type="button"
+                className="h-9 rounded-md border border-neutral-200 px-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
+                onClick={closeLinkDialog}
+              >
+                Abbrechen
+              </button>
+              <button
+                type="button"
+                className="h-9 rounded-md bg-neutral-950 px-3 text-sm font-semibold text-white transition hover:bg-neutral-800"
+                onClick={applyLink}
+              >
+                Anwenden
+              </button>
+            </div>
+          </div>
+        </div>
       ) : null}
       {showShortcutHint ? (
         <div className="pointer-events-none absolute bottom-2 right-2 z-10 rounded-md border border-neutral-200 bg-white/95 px-2.5 py-2 text-[11px] text-neutral-600 shadow-lg">
@@ -483,6 +661,26 @@ function formatMarkdownInline(value: string) {
     .split(inlinePattern)
     .filter(Boolean)
     .map((part) => {
+      const markdownLinkMatch = part.match(markdownLinkPattern);
+
+      if (markdownLinkMatch) {
+        const [, label, href] = markdownLinkMatch;
+        const normalizedHref = normalizeHref(href);
+
+        if (normalizedHref) {
+          return `<a href="${escapeHtml(normalizedHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+        }
+      }
+
+      if (isUrlLike(part)) {
+        const { text, trailing } = stripTrailingPunctuation(part);
+        const normalizedHref = normalizeHref(text);
+
+        if (normalizedHref) {
+          return `<a href="${escapeHtml(normalizedHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a>${escapeHtml(trailing)}`;
+        }
+      }
+
       if (
         (part.startsWith("**") && part.endsWith("**")) ||
         (part.startsWith("__") && part.endsWith("__"))
@@ -556,6 +754,17 @@ function inlineMarkdown(node: ChildNode): string {
     return "\n";
   }
 
+  if (node.tagName === "A") {
+    const label = node.textContent?.trim() ?? "";
+    const href = node.getAttribute("href") ?? "";
+
+    if (!label || !href) {
+      return label;
+    }
+
+    return `[${escapeMarkdownLinkText(label)}](${href})`;
+  }
+
   const content = Array.from(node.childNodes).map(inlineMarkdown).join("");
 
   if (node.tagName === "B" || node.tagName === "STRONG") {
@@ -596,6 +805,73 @@ function ensureSelection(editor: HTMLElement) {
 
   selection.removeAllRanges();
   selection.addRange(range);
+}
+
+function rangeBelongsToEditor(editor: HTMLElement, range: Range) {
+  return (
+    editor.contains(range.startContainer) && editor.contains(range.endContainer)
+  );
+}
+
+function getSelectedAnchor(editor: HTMLElement) {
+  const selection = window.getSelection();
+
+  if (!selection || selection.rangeCount === 0) {
+    return null;
+  }
+
+  const range = selection.getRangeAt(0);
+
+  if (!rangeBelongsToEditor(editor, range)) {
+    return null;
+  }
+
+  const element =
+    selection.anchorNode instanceof HTMLElement
+      ? selection.anchorNode
+      : selection.anchorNode?.parentElement;
+  const anchor = element?.closest("a");
+
+  return anchor instanceof HTMLAnchorElement && editor.contains(anchor)
+    ? anchor
+    : null;
+}
+
+function insertAnchorAtCurrentSelection(label: string, href: string) {
+  const selection = window.getSelection();
+
+  if (!selection || selection.rangeCount === 0) {
+    return;
+  }
+
+  insertAnchorAtRange(selection.getRangeAt(0), label, href);
+}
+
+function insertAnchorAtRange(range: Range, label: string, href: string) {
+  const anchor = document.createElement("a");
+  anchor.textContent = label;
+  setAnchorHref(anchor, href);
+
+  range.deleteContents();
+  range.insertNode(anchor);
+
+  const spacer = document.createTextNode(" ");
+  anchor.after(spacer);
+
+  const selection = window.getSelection();
+  const nextRange = document.createRange();
+  nextRange.setStartAfter(spacer);
+  nextRange.collapse(true);
+  selection?.removeAllRanges();
+  selection?.addRange(nextRange);
+}
+
+function savedRangeForEditor(editor: HTMLElement, range: Range | null) {
+  if (!range || !rangeBelongsToEditor(editor, range)) {
+    return null;
+  }
+
+  return range;
 }
 
 function getEditorFromRange(range: Range) {
@@ -645,6 +921,47 @@ function hasSelectedText(editor: HTMLElement) {
       editor.contains(focusNode) &&
       selection.toString().trim(),
   );
+}
+
+function normalizeHref(value: string) {
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return "";
+  }
+
+  if (/^(https?:\/\/|mailto:)/i.test(trimmedValue)) {
+    return trimmedValue;
+  }
+
+  if (/^www\./i.test(trimmedValue)) {
+    return `https://${trimmedValue}`;
+  }
+
+  return `https://${trimmedValue}`;
+}
+
+function isUrlLike(value: string) {
+  return rawUrlPattern.test(value.trim());
+}
+
+function setAnchorHref(anchor: HTMLAnchorElement, href: string) {
+  anchor.href = href;
+  anchor.target = "_blank";
+  anchor.rel = "noopener noreferrer";
+}
+
+function stripTrailingPunctuation(value: string) {
+  const match = value.match(/^(.+?)([.,;:!?)]*)$/);
+
+  return {
+    text: match?.[1] ?? value,
+    trailing: match?.[2] ?? "",
+  };
+}
+
+function escapeMarkdownLinkText(value: string) {
+  return value.replace(/\\/g, "\\\\").replace(/\]/g, "\\]");
 }
 
 function setNativeTextareaValue(textarea: HTMLTextAreaElement, value: string) {

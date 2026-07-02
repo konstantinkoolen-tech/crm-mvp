@@ -28,7 +28,10 @@ type TextBlock =
 const unorderedListPattern = /^[-*]\s+(.+)$/;
 const orderedListPattern = /^\d+[.)]\s+(.+)$/;
 const quotePattern = /^>\s?(.*)$/;
-const inlinePattern = /(\*\*[^*]+\*\*|__[^_]+__|_[^_\n]+_|\*[^*\n]+\*)/g;
+const markdownLinkPattern = /^\[([^\]\n]+)\]\(([^)\s]+)\)$/;
+const rawUrlPattern = /^(https?:\/\/[^\s<>()]+|www\.[^\s<>()]+)$/i;
+const inlinePattern =
+  /(\[[^\]\n]+\]\([^)]+\)|\*\*[^*]+\*\*|__[^_]+__|_[^_\n]+_|\*[^*\n]+\*|https?:\/\/[^\s<>()]+|www\.[^\s<>()]+)/gi;
 
 export function RichTextDisplay({
   className,
@@ -187,6 +190,39 @@ function formatInline(value: string) {
   const parts = value.split(inlinePattern).filter(Boolean);
 
   parts.forEach((part, index) => {
+    const markdownLinkMatch = part.match(markdownLinkPattern);
+
+    if (markdownLinkMatch) {
+      const [, label, href] = markdownLinkMatch;
+      const normalizedHref = normalizeHref(href);
+
+      if (normalizedHref) {
+        nodes.push(
+          <LinkText href={normalizedHref} key={index}>
+            {label}
+          </LinkText>,
+        );
+        return;
+      }
+    }
+
+    if (isUrlLike(part)) {
+      const { text, trailing } = stripTrailingPunctuation(part);
+      const normalizedHref = normalizeHref(text);
+
+      if (normalizedHref) {
+        nodes.push(
+          <LinkText href={normalizedHref} key={index}>
+            {text}
+          </LinkText>,
+        );
+        if (trailing) {
+          nodes.push(trailing);
+        }
+        return;
+      }
+    }
+
     if (
       (part.startsWith("**") && part.endsWith("**")) ||
       (part.startsWith("__") && part.endsWith("__"))
@@ -207,4 +243,54 @@ function formatInline(value: string) {
   });
 
   return nodes;
+}
+
+function LinkText({
+  children,
+  href,
+}: {
+  children: ReactNode;
+  href: string;
+}) {
+  return (
+    <a
+      className="font-medium text-neutral-950 underline decoration-neutral-300 underline-offset-2 transition hover:decoration-neutral-950"
+      href={href}
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      {children}
+    </a>
+  );
+}
+
+function normalizeHref(value: string) {
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return "";
+  }
+
+  if (/^(https?:\/\/|mailto:)/i.test(trimmedValue)) {
+    return trimmedValue;
+  }
+
+  if (/^www\./i.test(trimmedValue)) {
+    return `https://${trimmedValue}`;
+  }
+
+  return `https://${trimmedValue}`;
+}
+
+function isUrlLike(value: string) {
+  return rawUrlPattern.test(value.trim());
+}
+
+function stripTrailingPunctuation(value: string) {
+  const match = value.match(/^(.+?)([.,;:!?)]*)$/);
+
+  return {
+    text: match?.[1] ?? value,
+    trailing: match?.[2] ?? "",
+  };
 }
