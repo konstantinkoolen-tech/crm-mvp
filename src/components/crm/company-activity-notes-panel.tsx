@@ -24,9 +24,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ModalShell } from "@/components/crm/modal-shell";
+import { RichTextDisplay } from "@/components/crm/rich-text-display";
+import { RichTextTextarea } from "@/components/crm/rich-text-textarea";
 import { TaskDeleteButton } from "@/components/crm/task-delete-button";
 import { TaskEditModalButton } from "@/components/crm/task-edit-modal-button";
-import { Textarea } from "@/components/ui/textarea";
 import type { ActivityWithContext } from "@/lib/db/activities";
 import {
   activityDirectionLabels,
@@ -310,7 +311,7 @@ function TaskRow({
         <p className="text-xs font-medium text-neutral-500">Inhalt</p>
         <div className="mt-1 text-sm text-neutral-700">
           {task.description ? (
-            <p className="whitespace-pre-wrap leading-6">{task.description}</p>
+            <RichTextDisplay value={task.description} />
           ) : (
             <p className="text-neutral-500">Keine weiteren Informationen.</p>
           )}
@@ -473,7 +474,7 @@ function TaskCompleteButton({
                   <Label htmlFor={`follow-up-description-${task.id}`}>
                     Inhalt
                   </Label>
-                  <Textarea
+                  <RichTextTextarea
                     id={`follow-up-description-${task.id}`}
                     name="follow_up_description"
                     rows={4}
@@ -628,7 +629,7 @@ function ActivityRow({
             <p className="text-xs font-medium text-neutral-500">Inhalt</p>
             <div className="mt-1 text-sm text-neutral-700">
               {activity.body ? (
-                <p className="whitespace-pre-wrap leading-6">{activity.body}</p>
+                <RichTextDisplay value={activity.body} />
               ) : (
                 <p className="text-neutral-500">
                   Keine weiteren Informationen.
@@ -799,7 +800,7 @@ function TaskModal({
 
         <div className="space-y-2">
           <Label htmlFor="company-task-description">Task-Inhalt</Label>
-          <Textarea
+          <RichTextTextarea
             id="company-task-description"
             name="description"
             rows={4}
@@ -865,7 +866,7 @@ function CompanyActivityModal({
 
         <div className="space-y-2">
           <Label htmlFor="company-note-body">Inhalt</Label>
-          <Textarea
+          <RichTextTextarea
             id="company-note-body"
             name="body"
             rows={6}

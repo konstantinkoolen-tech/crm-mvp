@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ModalShell } from "@/components/crm/modal-shell";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextTextarea } from "@/components/crm/rich-text-textarea";
 import type { Company } from "@/lib/db/companies";
 import {
   dealStageLabels,
@@ -153,7 +153,7 @@ export function DealCreateModalButton({
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="global-deal-description">Beschreibung</Label>
-                  <Textarea
+                  <RichTextTextarea
                     id="global-deal-description"
                     name="description"
                     placeholder="Kontext, Bedarf, nächster Schritt"

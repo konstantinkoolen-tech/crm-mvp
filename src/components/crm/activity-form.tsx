@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextTextarea } from "@/components/crm/rich-text-textarea";
 import { activityTypeLabels } from "@/lib/activities/constants";
 import type { Contact } from "@/lib/db/contacts";
 import type { ActivityType } from "@/types/database";
@@ -102,7 +102,7 @@ export function ActivityForm({
 
           <div className="space-y-2">
             <Label htmlFor="body">Notiz</Label>
-            <Textarea
+            <RichTextTextarea
               id="body"
               name="body"
               placeholder="Was wurde besprochen? Was ist der nächste Schritt?"

@@ -4,6 +4,7 @@ import { CalendarDays, Plus } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ListFilterBar } from "@/components/crm/list-filter-bar";
+import { RichTextDisplay } from "@/components/crm/rich-text-display";
 import { TaskActions } from "@/components/crm/task-actions";
 import { TaskStatusBadge } from "@/components/crm/task-status-badge";
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -170,14 +171,13 @@ export function TaskList({ tasks }: TaskListProps) {
                       </span>
                     )}
                     {task.description ? (
-                      <div
+                      <RichTextDisplay
                         className={cn(
-                          "mt-1 line-clamp-2 text-xs",
+                          "mt-1 line-clamp-2 text-xs leading-5",
                           isDone ? "text-neutral-400" : "text-neutral-500",
                         )}
-                      >
-                        {task.description}
-                      </div>
+                        value={task.description}
+                      />
                     ) : null}
                   </TableCell>
                   <TableCell>

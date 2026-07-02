@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ModalShell } from "@/components/crm/modal-shell";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextTextarea } from "@/components/crm/rich-text-textarea";
 import {
   dealStageLabels,
   dealStages,
@@ -166,7 +166,7 @@ function ContactFields() {
       </div>
       <div className="space-y-2 md:col-span-2">
         <Label htmlFor="modal-contact-notes">Notizen</Label>
-        <Textarea
+        <RichTextTextarea
           id="modal-contact-notes"
           name="notes"
           placeholder="Rolle im Buying Committee, Kontext, nächster Schritt"
@@ -256,7 +256,7 @@ function DealFields() {
       </div>
       <div className="space-y-2 md:col-span-2">
         <Label htmlFor="modal-deal-description">Beschreibung</Label>
-        <Textarea
+        <RichTextTextarea
           id="modal-deal-description"
           name="description"
           placeholder="Kontext, Bedarf, nächster Schritt"

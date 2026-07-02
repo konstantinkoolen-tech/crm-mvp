@@ -11,7 +11,7 @@ import {
 } from "react";
 import { ChevronDown } from "lucide-react";
 import { updateCompanyNotes } from "@/app/(crm)/companies/actions";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextTextarea } from "@/components/crm/rich-text-textarea";
 import { cn } from "@/lib/utils";
 
 type InlineCompanyNotesProps = {
@@ -102,13 +102,14 @@ export function InlineCompanyNotes({
   return (
     <div className="space-y-2">
       <div className="relative">
-        <Textarea
+        <RichTextTextarea
           ref={textareaRef}
           aria-label="Unternehmensnotizen"
           className={cn(
-            "min-h-32 resize-y overflow-hidden border-transparent bg-transparent px-0 shadow-none hover:border-neutral-200 hover:bg-neutral-50 focus-visible:border-neutral-300 focus-visible:bg-white focus-visible:px-3",
+            "min-h-32 resize-y overflow-hidden bg-transparent shadow-none",
             hasHiddenText ? "pb-12" : "",
           )}
+          wrapperClassName="border-transparent bg-transparent shadow-none focus-within:ring-0"
           onBlur={saveNotes}
           onChange={(event) => {
             setNotes(event.target.value);

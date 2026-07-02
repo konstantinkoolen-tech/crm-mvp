@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextTextarea } from "@/components/crm/rich-text-textarea";
 import { TaskOwnerSelect } from "@/components/crm/task-owner-select";
 import {
   employeeCountFromValue,
@@ -150,7 +150,7 @@ export function CompanyForm({
 
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="notes">Notizen</Label>
-              <Textarea
+              <RichTextTextarea
                 id="notes"
                 name="notes"
                 defaultValue={company?.notes ?? ""}

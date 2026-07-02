@@ -13,6 +13,7 @@ import { ContactDeleteForm } from "@/components/crm/contact-delete-form";
 import { ContactEditModalButton } from "@/components/crm/contact-edit-modal-button";
 import { ContactCreateButton } from "@/components/crm/company-create-buttons";
 import { ContactStatusBadge } from "@/components/crm/contact-status-badge";
+import { RichTextDisplay } from "@/components/crm/rich-text-display";
 import {
   Card,
   CardContent,
@@ -306,9 +307,10 @@ function ContactRow({
                   {activity.title}
                 </p>
                 {activity.body ? (
-                  <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-neutral-600">
-                    {activity.body}
-                  </p>
+                  <RichTextDisplay
+                    className="mt-1 text-sm text-neutral-600"
+                    value={activity.body}
+                  />
                 ) : null}
                 <ContactActivityOutreachDetails activity={activity} />
               </li>
@@ -362,7 +364,7 @@ function ContactNotesTopline({ notes }: { notes: string | null }) {
   return (
     <div className="mb-4 rounded-md border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700 lg:ml-6">
       <span className="font-medium text-neutral-950">Notizen: </span>
-      <span className="whitespace-pre-wrap leading-6">{trimmedNotes}</span>
+      <RichTextDisplay className="mt-1 leading-6" value={trimmedNotes} />
     </div>
   );
 }

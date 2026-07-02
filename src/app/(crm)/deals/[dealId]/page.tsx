@@ -5,6 +5,7 @@ import { ActivityTimeline } from "@/components/crm/activity-timeline";
 import { DealActivityActions } from "@/components/crm/deal-activity-actions";
 import { DealStageBadge } from "@/components/crm/deal-stage-badge";
 import { DealEditModalButton } from "@/components/crm/deal-edit-modal-button";
+import { RichTextDisplay } from "@/components/crm/rich-text-display";
 import {
   Card,
   CardContent,
@@ -134,9 +135,10 @@ export default async function DealDetailPage({
             <DetailItem label="Status" value={dealStatusLabels[deal.status]} />
           </dl>
           {deal.description ? (
-            <p className="mt-5 whitespace-pre-wrap text-sm leading-6 text-neutral-700">
-              {deal.description}
-            </p>
+            <RichTextDisplay
+              className="mt-5 text-sm text-neutral-700"
+              value={deal.description}
+            />
           ) : null}
         </CardContent>
       </Card>

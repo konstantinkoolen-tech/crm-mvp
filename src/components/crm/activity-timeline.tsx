@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { ActivityDeleteButton } from "@/components/crm/activity-delete-button";
 import { ActivityEditModalButton } from "@/components/crm/activity-edit-modal-button";
 import { ListFilterBar } from "@/components/crm/list-filter-bar";
+import { RichTextDisplay } from "@/components/crm/rich-text-display";
 import {
   Card,
   CardContent,
@@ -165,9 +166,10 @@ export function ActivityTimeline({
                         Zuständig: {ownerDisplayName(activity.owner)}
                       </div>
                       {activity.body ? (
-                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-neutral-700">
-                          {activity.body}
-                        </p>
+                        <RichTextDisplay
+                          className="mt-2 text-sm text-neutral-700"
+                          value={activity.body}
+                        />
                       ) : null}
                       <OutreachDetails activity={activity} />
                       <ContextLinks activity={activity} />

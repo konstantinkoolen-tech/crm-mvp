@@ -4,11 +4,11 @@ import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { updateTask } from "@/app/(crm)/tasks/actions";
 import { ModalShell } from "@/components/crm/modal-shell";
+import { RichTextTextarea } from "@/components/crm/rich-text-textarea";
 import { TaskOwnerSelect } from "@/components/crm/task-owner-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import type { Contact } from "@/lib/db/contacts";
 import type { TeamProfile } from "@/lib/db/profiles";
 import type { TaskWithContext } from "@/lib/db/tasks";
@@ -133,7 +133,7 @@ export function TaskEditModalButton({
 
             <div className="space-y-2">
               <Label htmlFor={`task-description-${task.id}`}>Task-Inhalt</Label>
-              <Textarea
+              <RichTextTextarea
                 id={`task-description-${task.id}`}
                 name="description"
                 rows={5}

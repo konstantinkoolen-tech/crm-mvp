@@ -18,10 +18,11 @@ import {
 } from "@/app/(crm)/settings/actions";
 import { AssociatedFormSubmitButton } from "@/components/crm/associated-form-submit-button";
 import { DeleteConfirmButton } from "@/components/crm/delete-confirm-button";
+import { RichTextDisplay } from "@/components/crm/rich-text-display";
+import { RichTextTextarea } from "@/components/crm/rich-text-textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import type { ValueProp } from "@/lib/db/value-props";
 
 type ValuePropManagerProps = {
@@ -143,10 +144,15 @@ export function ValuePropManager({
                   <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
                     Erklärung
                   </p>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-neutral-700">
-                    {valueProp.description?.trim() ||
-                      "Noch keine Erklärung hinterlegt."}
-                  </p>
+                  <RichTextDisplay
+                    className="mt-2 text-sm text-neutral-700"
+                    emptyFallback={
+                      <p className="mt-2 text-sm leading-6 text-neutral-700">
+                        Noch keine Erklärung hinterlegt.
+                      </p>
+                    }
+                    value={valueProp.description}
+                  />
                 </div>
               </details>
             ))}
@@ -298,7 +304,7 @@ function ValuePropModal({
 
           <div className="space-y-2">
             <Label htmlFor="value-prop-modal-description">Erklärung</Label>
-            <Textarea
+            <RichTextTextarea
               id="value-prop-modal-description"
               name="description"
               rows={6}

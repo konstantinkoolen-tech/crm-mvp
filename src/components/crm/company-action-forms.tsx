@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextTextarea } from "@/components/crm/rich-text-textarea";
 import type { Contact } from "@/lib/db/contacts";
 import {
   TASK_DESCRIPTION_MAX_LENGTH,
@@ -87,7 +87,7 @@ export function CompanyActionForms({
 
             <div className="space-y-2">
               <Label htmlFor="company-task-description">Task-Inhalt</Label>
-              <Textarea
+              <RichTextTextarea
                 id="company-task-description"
                 name="description"
                 rows={4}
@@ -141,7 +141,7 @@ export function CompanyActionForms({
 
             <div className="space-y-2">
               <Label htmlFor="company-note-body">Notiz</Label>
-              <Textarea
+              <RichTextTextarea
                 id="company-note-body"
                 name="body"
                 rows={6}

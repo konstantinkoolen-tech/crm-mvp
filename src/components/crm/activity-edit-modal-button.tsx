@@ -12,10 +12,10 @@ import {
 } from "lucide-react";
 import { updateActivity } from "@/app/(crm)/activities/actions";
 import { ModalShell } from "@/components/crm/modal-shell";
+import { RichTextTextarea } from "@/components/crm/rich-text-textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { activityTypeLabels } from "@/lib/activities/constants";
 import type { ActivityWithContext } from "@/lib/db/activities";
 import type { ValueProp } from "@/lib/db/value-props";
@@ -244,7 +244,7 @@ export function ActivityEditModalButton({
 
             <div className="space-y-2">
               <Label htmlFor={`activity-body-${activity.id}`}>Inhalt</Label>
-              <Textarea
+              <RichTextTextarea
                 id={`activity-body-${activity.id}`}
                 name="body"
                 rows={6}

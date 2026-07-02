@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { createActivity } from "@/app/(crm)/activities/actions";
+import { RichTextTextarea } from "@/components/crm/rich-text-textarea";
 import { TaskOwnerSelect } from "@/components/crm/task-owner-select";
 import { Button } from "@/components/ui/button";
 import type { Contact } from "@/lib/db/contacts";
@@ -296,18 +297,22 @@ export function ContactQuickActions({
                     />
                   </label>
 
-                  <label className="block">
-                    <span className="text-sm font-medium text-neutral-700">
+                  <div className="block">
+                    <label
+                      htmlFor={`quick-activity-body-${contact.id}`}
+                      className="text-sm font-medium text-neutral-700"
+                    >
                       Inhalt der Aktivität
-                    </span>
-                    <textarea
+                    </label>
+                    <RichTextTextarea
+                      id={`quick-activity-body-${contact.id}`}
                       name="body"
                       rows={5}
                       required
                       placeholder="Kurze Zusammenfassung, Ergebnis oder nächster Schritt..."
-                      className="mt-1 w-full resize-none rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+                      wrapperClassName="mt-1"
                     />
-                  </label>
+                  </div>
 
                   <div>
                     <p className="text-sm font-medium text-neutral-700">
@@ -546,18 +551,22 @@ export function ContactQuickActions({
                           profiles={teamProfiles}
                         />
 
-                        <label className="block">
-                          <span className="text-sm font-medium text-neutral-700">
+                        <div className="block">
+                          <label
+                            htmlFor={`quick-task-description-${contact.id}`}
+                            className="text-sm font-medium text-neutral-700"
+                          >
                             Task-Inhalt
-                          </span>
-                          <textarea
+                          </label>
+                          <RichTextTextarea
+                            id={`quick-task-description-${contact.id}`}
                             name="task_description"
                             rows={3}
                             maxLength={TASK_DESCRIPTION_MAX_LENGTH}
                             placeholder="Was soll als nächstes passieren?"
-                            className="mt-1 w-full resize-none rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+                            wrapperClassName="mt-1"
                           />
-                        </label>
+                        </div>
                       </div>
                     </div>
                   ) : null}
