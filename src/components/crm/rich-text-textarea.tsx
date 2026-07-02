@@ -1,19 +1,14 @@
 "use client";
 
 import {
-  Bold,
-  Italic,
-  List,
-  ListOrdered,
-  Quote,
-} from "lucide-react";
-import {
   forwardRef,
   type ComponentPropsWithoutRef,
-  type MouseEvent,
-  type ReactNode,
+  type FocusEvent,
+  type KeyboardEvent,
+  useEffect,
   useImperativeHandle,
   useRef,
+  useState,
 } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -23,22 +18,43 @@ type RichTextTextareaProps = ComponentPropsWithoutRef<"textarea"> & {
 };
 
 const fallbackSelection = "Text";
+const shortcutHoldDelayMs = 550;
+const shortcutHelp = [
+  ["⌘ B", "Fett"],
+  ["⌘ I", "Kursiv"],
+  ["⌘ ⇧ 8", "Bullet points"],
+  ["⌘ ⇧ 7", "Nummerierte Liste"],
+  ["⌘ ⇧ 9", "Zitat"],
+];
 
 export const RichTextTextarea = forwardRef<
   HTMLTextAreaElement,
   RichTextTextareaProps
 >(function RichTextTextarea(
-  { className, wrapperClassName, ...textareaProps },
+  {
+    className,
+    onBlur,
+    onFocus,
+    onKeyDown,
+    onKeyUp,
+    wrapperClassName,
+    ...textareaProps
+  },
   forwardedRef,
 ) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const toolbarDisabled = Boolean(textareaProps.disabled || textareaProps.readOnly);
+  const shortcutHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showShortcutHint, setShowShortcutHint] = useState(false);
 
   useImperativeHandle(forwardedRef, () => textareaRef.current as HTMLTextAreaElement);
 
-  function handleToolbarMouseDown(event: MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-  }
+  useEffect(() => {
+    return () => {
+      if (shortcutHintTimerRef.current) {
+        clearTimeout(shortcutHintTimerRef.current);
+      }
+    };
+  }, []);
 
   function applyInline(marker: "**" | "_") {
     updateTextarea((value, start, end) => {
@@ -105,99 +121,138 @@ export const RichTextTextarea = forwardRef<
     textarea.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
+  function scheduleShortcutHint() {
+    if (shortcutHintTimerRef.current || showShortcutHint) {
+      return;
+    }
+
+    shortcutHintTimerRef.current = setTimeout(() => {
+      shortcutHintTimerRef.current = null;
+      setShowShortcutHint(true);
+    }, shortcutHoldDelayMs);
+  }
+
+  function clearShortcutHint() {
+    if (shortcutHintTimerRef.current) {
+      clearTimeout(shortcutHintTimerRef.current);
+      shortcutHintTimerRef.current = null;
+    }
+
+    setShowShortcutHint(false);
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    onKeyDown?.(event);
+
+    if (
+      event.defaultPrevented ||
+      textareaProps.disabled ||
+      textareaProps.readOnly
+    ) {
+      return;
+    }
+
+    const usesPrimaryModifier =
+      event.metaKey ||
+      event.ctrlKey ||
+      event.key === "Meta" ||
+      event.key === "Control";
+
+    if (!usesPrimaryModifier) {
+      return;
+    }
+
+    scheduleShortcutHint();
+
+    const key = event.key.toLowerCase();
+
+    if (key === "b" && !event.shiftKey && !event.altKey) {
+      event.preventDefault();
+      clearShortcutHint();
+      applyInline("**");
+      return;
+    }
+
+    if (key === "i" && !event.shiftKey && !event.altKey) {
+      event.preventDefault();
+      clearShortcutHint();
+      applyInline("_");
+      return;
+    }
+
+    if (event.shiftKey && !event.altKey && event.code === "Digit8") {
+      event.preventDefault();
+      clearShortcutHint();
+      applyBlock("unordered");
+      return;
+    }
+
+    if (event.shiftKey && !event.altKey && event.code === "Digit7") {
+      event.preventDefault();
+      clearShortcutHint();
+      applyBlock("ordered");
+      return;
+    }
+
+    if (event.shiftKey && !event.altKey && event.code === "Digit9") {
+      event.preventDefault();
+      clearShortcutHint();
+      applyBlock("quote");
+    }
+  }
+
+  function handleKeyUp(event: KeyboardEvent<HTMLTextAreaElement>) {
+    onKeyUp?.(event);
+
+    if (event.key === "Meta" || event.key === "Control") {
+      clearShortcutHint();
+    }
+  }
+
+  function handleFocus(event: FocusEvent<HTMLTextAreaElement>) {
+    onFocus?.(event);
+  }
+
+  function handleBlur(event: FocusEvent<HTMLTextAreaElement>) {
+    onBlur?.(event);
+    clearShortcutHint();
+  }
+
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm focus-within:ring-2 focus-within:ring-neutral-950/20",
+        "relative overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm focus-within:ring-2 focus-within:ring-neutral-950/20",
         wrapperClassName,
       )}
     >
-      <div className="flex items-center gap-1 border-b border-neutral-100 bg-neutral-50 px-2 py-1.5">
-        <ToolbarButton
-          label="Fett"
-          disabled={toolbarDisabled}
-          onMouseDown={handleToolbarMouseDown}
-          onClick={() => applyInline("**")}
-        >
-          <Bold aria-hidden="true" />
-        </ToolbarButton>
-        <ToolbarButton
-          label="Kursiv"
-          disabled={toolbarDisabled}
-          onMouseDown={handleToolbarMouseDown}
-          onClick={() => applyInline("_")}
-        >
-          <Italic aria-hidden="true" />
-        </ToolbarButton>
-        <ToolbarDivider />
-        <ToolbarButton
-          label="Bullet points"
-          disabled={toolbarDisabled}
-          onMouseDown={handleToolbarMouseDown}
-          onClick={() => applyBlock("unordered")}
-        >
-          <List aria-hidden="true" />
-        </ToolbarButton>
-        <ToolbarButton
-          label="Nummerierte Liste"
-          disabled={toolbarDisabled}
-          onMouseDown={handleToolbarMouseDown}
-          onClick={() => applyBlock("ordered")}
-        >
-          <ListOrdered aria-hidden="true" />
-        </ToolbarButton>
-        <ToolbarButton
-          label="Zitat"
-          disabled={toolbarDisabled}
-          onMouseDown={handleToolbarMouseDown}
-          onClick={() => applyBlock("quote")}
-        >
-          <Quote aria-hidden="true" />
-        </ToolbarButton>
-      </div>
       <Textarea
         {...textareaProps}
         ref={textareaRef}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
         className={cn(
-          "rounded-none border-0 shadow-none focus-visible:ring-0",
+          "rounded-md border-0 shadow-none focus-visible:ring-0",
           className,
         )}
       />
+      {showShortcutHint ? (
+        <div className="pointer-events-none absolute bottom-2 right-2 z-10 rounded-md border border-neutral-200 bg-white/95 px-2.5 py-2 text-[11px] text-neutral-600 shadow-lg">
+          <p className="mb-1 font-semibold text-neutral-900">Shortcuts</p>
+          <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5">
+            {shortcutHelp.map(([shortcut, label]) => (
+              <div className="contents" key={shortcut}>
+                <dt className="font-mono text-neutral-950">{shortcut}</dt>
+                <dd>{label}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      ) : null}
     </div>
   );
 });
-
-function ToolbarButton({
-  children,
-  label,
-  disabled,
-  onClick,
-  onMouseDown,
-}: {
-  children: ReactNode;
-  disabled: boolean;
-  label: string;
-  onClick: () => void;
-  onMouseDown: (event: MouseEvent<HTMLButtonElement>) => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      className="inline-flex size-8 items-center justify-center rounded text-neutral-600 transition hover:bg-white hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-600 [&_svg]:size-4"
-      onClick={onClick}
-      onMouseDown={onMouseDown}
-    >
-      {children}
-    </button>
-  );
-}
-
-function ToolbarDivider() {
-  return <span className="mx-1 h-5 w-px bg-neutral-200" aria-hidden="true" />;
-}
 
 function formatBlockLine(
   line: string,
