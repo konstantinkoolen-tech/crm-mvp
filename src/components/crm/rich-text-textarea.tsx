@@ -25,9 +25,9 @@ const shortcutHoldDelayMs = 550;
 const shortcutHelp = [
   ["⌘ B", "Fett"],
   ["⌘ I", "Kursiv"],
-  ["⌘ ⇧ 8", "Bullet points"],
-  ["⌘ ⇧ 7", "Nummerierte Liste"],
-  ["⌘ ⇧ 9", "Zitat"],
+  ["- Space", "Bullet points"],
+  ["1. Space", "Nummerierte Liste"],
+  ["⌘ ⇧ 9", "Zitat für Markierung"],
 ];
 const unorderedListPattern = /^[-*]\s+(.+)$/;
 const orderedListPattern = /^\d+[.)]\s+(.+)$/;
@@ -142,7 +142,14 @@ export const RichTextTextarea = forwardRef<
     }
 
     editor.focus();
-    ensureSelection(editor);
+
+    if (command === "quote" && !hasSelectedText(editor)) {
+      return;
+    }
+
+    if (command !== "quote") {
+      ensureSelection(editor);
+    }
 
     if (command === "bold") {
       document.execCommand("bold");
@@ -202,6 +209,21 @@ export const RichTextTextarea = forwardRef<
 
     if (event.defaultPrevented || disabled || readOnly) {
       return;
+    }
+
+    if (
+      event.key === " " &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !event.shiftKey
+    ) {
+      const converted = convertListTriggerToList();
+
+      if (converted) {
+        event.preventDefault();
+        return;
+      }
     }
 
     const usesPrimaryModifier =
@@ -302,7 +324,7 @@ export const RichTextTextarea = forwardRef<
         aria-label={textareaProps["aria-label"] ?? placeholder ?? "Text"}
         aria-multiline="true"
         className={cn(
-          "min-h-24 w-full overflow-auto rounded-md bg-white px-3 py-2 text-sm leading-6 text-neutral-950 outline-none transition empty:before:text-neutral-400 disabled:cursor-not-allowed disabled:opacity-50",
+          "min-h-24 w-full overflow-auto rounded-md bg-white px-3 py-2 text-sm leading-6 text-neutral-950 outline-none transition empty:before:text-neutral-400 disabled:cursor-not-allowed disabled:opacity-50 [&_blockquote]:border-l-2 [&_blockquote]:border-neutral-300 [&_blockquote]:pl-3 [&_blockquote]:text-neutral-600 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5",
           disabled || readOnly ? "cursor-not-allowed opacity-50" : "",
           className,
         )}
@@ -343,6 +365,44 @@ export const RichTextTextarea = forwardRef<
     </div>
   );
 });
+
+function convertListTriggerToList() {
+  const selection = window.getSelection();
+
+  if (!selection || !selection.isCollapsed || selection.rangeCount === 0) {
+    return false;
+  }
+
+  const range = selection.getRangeAt(0);
+  const editor = getEditorFromRange(range);
+
+  if (!editor) {
+    return false;
+  }
+
+  const block = getCurrentBlock(editor, range.startContainer);
+  const triggerRange = range.cloneRange();
+  triggerRange.setStart(block, 0);
+
+  const triggerText = triggerRange.toString().replace(/\u00a0/g, " ");
+  const trimmedTrigger = triggerText.trim();
+  const isUnordered = trimmedTrigger === "-" || trimmedTrigger === "*";
+  const isOrdered = trimmedTrigger === "1.";
+
+  if (
+    (!isUnordered && !isOrdered) ||
+    triggerText.trimStart() !== trimmedTrigger
+  ) {
+    return false;
+  }
+
+  triggerRange.deleteContents();
+  document.execCommand(isOrdered ? "insertOrderedList" : "insertUnorderedList");
+
+  editor.dispatchEvent(new InputEvent("input", inputEventOptions));
+
+  return true;
+}
 
 function valueToString(value: RichTextTextareaProps["value"] | undefined) {
   if (Array.isArray(value)) {
@@ -536,6 +596,55 @@ function ensureSelection(editor: HTMLElement) {
 
   selection.removeAllRanges();
   selection.addRange(range);
+}
+
+function getEditorFromRange(range: Range) {
+  const element =
+    range.startContainer instanceof HTMLElement
+      ? range.startContainer
+      : range.startContainer.parentElement;
+
+  const editor = element?.closest('[role="textbox"][contenteditable="true"]');
+
+  return editor instanceof HTMLDivElement ? editor : null;
+}
+
+function getCurrentBlock(editor: HTMLElement, node: Node) {
+  let element = node instanceof HTMLElement ? node : node.parentElement;
+
+  while (element && element !== editor) {
+    if (
+      element.tagName === "DIV" ||
+      element.tagName === "P" ||
+      element.tagName === "LI" ||
+      element.tagName === "BLOCKQUOTE"
+    ) {
+      return element;
+    }
+
+    element = element.parentElement;
+  }
+
+  return editor;
+}
+
+function hasSelectedText(editor: HTMLElement) {
+  const selection = window.getSelection();
+
+  if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+    return false;
+  }
+
+  const anchorNode = selection.anchorNode;
+  const focusNode = selection.focusNode;
+
+  return Boolean(
+    anchorNode &&
+      focusNode &&
+      editor.contains(anchorNode) &&
+      editor.contains(focusNode) &&
+      selection.toString().trim(),
+  );
 }
 
 function setNativeTextareaValue(textarea: HTMLTextAreaElement, value: string) {
