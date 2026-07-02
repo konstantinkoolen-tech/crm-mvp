@@ -26,6 +26,10 @@ const shortcutHelp = [
   ["⌘ ⇧ 7", "Nummerierte Liste"],
   ["⌘ ⇧ 9", "Zitat"],
 ];
+const inputEventOptions = {
+  bubbles: true,
+  inputType: "insertText",
+} as const;
 
 export const RichTextTextarea = forwardRef<
   HTMLTextAreaElement,
@@ -115,10 +119,19 @@ export const RichTextTextarea = forwardRef<
     const end = textarea.selectionEnd;
     const result = formatter(textarea.value, start, end);
 
-    textarea.value = result.value;
+    setNativeTextareaValue(textarea, result.value);
     textarea.focus();
     textarea.setSelectionRange(result.nextSelectionStart, result.nextSelectionEnd);
-    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    dispatchTextareaInput(textarea);
+
+    requestAnimationFrame(() => {
+      if (document.activeElement === textarea) {
+        textarea.setSelectionRange(
+          result.nextSelectionStart,
+          result.nextSelectionEnd,
+        );
+      }
+    });
   }
 
   function scheduleShortcutHint() {
@@ -274,4 +287,28 @@ function formatBlockLine(
 
 function stripBlockPrefix(line: string) {
   return line.replace(/^(\s*)([-*]\s+|\d+[.)]\s+|>\s?)/, "$1").trimStart();
+}
+
+function setNativeTextareaValue(textarea: HTMLTextAreaElement, value: string) {
+  const valueSetter = Object.getOwnPropertyDescriptor(textarea, "value")?.set;
+  const prototypeValueSetter = Object.getOwnPropertyDescriptor(
+    HTMLTextAreaElement.prototype,
+    "value",
+  )?.set;
+
+  if (prototypeValueSetter && valueSetter !== prototypeValueSetter) {
+    prototypeValueSetter.call(textarea, value);
+    return;
+  }
+
+  textarea.value = value;
+}
+
+function dispatchTextareaInput(textarea: HTMLTextAreaElement) {
+  if (typeof InputEvent === "function") {
+    textarea.dispatchEvent(new InputEvent("input", inputEventOptions));
+    return;
+  }
+
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
 }
