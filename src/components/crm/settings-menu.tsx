@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogoutButton } from "@/components/crm/logout-button";
 
 type SettingsMenuProps = {
@@ -51,12 +51,39 @@ export function SettingsMenu({
   userEmail,
 }: SettingsMenuProps) {
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const visibleSettingsLinks = settingsLinks.filter(
     (item) => item.permission !== "value_props" || canManageValueProps,
   );
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={menuRef}>
       {open ? (
         <div className="absolute bottom-full left-0 z-20 mb-2 w-72 rounded-lg border border-neutral-200 bg-white p-2 shadow-lg">
           <div className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-500">
@@ -92,6 +119,7 @@ export function SettingsMenu({
         </div>
       ) : null}
       <button
+        aria-expanded={open}
         className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-950"
         onClick={() => setOpen((value) => !value)}
         type="button"

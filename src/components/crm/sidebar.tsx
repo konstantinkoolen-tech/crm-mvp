@@ -7,7 +7,6 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { LogoutButton } from "@/components/crm/logout-button";
 import { SettingsMenu } from "@/components/crm/settings-menu";
 import { cn } from "@/lib/utils";
 
@@ -101,7 +100,6 @@ export function Sidebar({
           canManageValueProps={canManageValueProps}
           userEmail={userEmail}
         />
-        <LogoutButton />
       </div>
     </aside>
   );
