@@ -23,6 +23,20 @@ export type ContactWithCompany = Contact & {
     id: string;
     name: string;
   } | null;
+  event_associations: {
+    id: string;
+    event_id: string;
+    event_date_id: string | null;
+    event: {
+      id: string;
+      name: string;
+      focus: string | null;
+    } | null;
+    event_date: {
+      id: string;
+      event_date: string;
+    } | null;
+  }[];
   owner: ListOwner | null;
 };
 
@@ -52,7 +66,7 @@ export async function listContacts() {
   const { data, error } = await supabase
     .from("contacts")
     .select(
-      `${contactSelect}, company:companies(id, name), owner:profiles!contacts_owner_id_fkey(id, email, full_name, display_name)`,
+      `${contactSelect}, company:companies(id, name), event_associations(id, event_id, event_date_id, event:events(id, name, focus), event_date:event_dates(id, event_date)), owner:profiles!contacts_owner_id_fkey(id, email, full_name, display_name)`,
     )
     .order("updated_at", { ascending: false });
 
@@ -69,7 +83,7 @@ export async function getContact(contactId: string) {
   const { data, error } = await supabase
     .from("contacts")
     .select(
-      `${contactSelect}, company:companies(id, name), owner:profiles!contacts_owner_id_fkey(id, email, full_name, display_name)`,
+      `${contactSelect}, company:companies(id, name), event_associations(id, event_id, event_date_id, event:events(id, name, focus), event_date:event_dates(id, event_date)), owner:profiles!contacts_owner_id_fkey(id, email, full_name, display_name)`,
     )
     .eq("id", contactId)
     .maybeSingle();

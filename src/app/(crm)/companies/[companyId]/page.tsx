@@ -5,6 +5,7 @@ import { CompanyContacts } from "@/components/crm/company-contacts";
 import { CompanyDeals } from "@/components/crm/company-deals";
 import { CompanyDeleteForm } from "@/components/crm/company-delete-form";
 import { CompanyEditModalButton } from "@/components/crm/company-edit-modal-button";
+import { CompanyEvents } from "@/components/crm/company-events";
 import { CompanyStatusBadge } from "@/components/crm/company-status-badge";
 import { InlineCompanyNotes } from "@/components/crm/inline-company-notes";
 import {
@@ -19,6 +20,10 @@ import { getCompany, listCompanies } from "@/lib/db/companies";
 import { listActivitiesForCompany } from "@/lib/db/activities";
 import { listContactsForCompany } from "@/lib/db/contacts";
 import { listDealsForCompany } from "@/lib/db/deals";
+import {
+  listEventAssociationsForCompany,
+  listEvents,
+} from "@/lib/db/events";
 import { getCurrentProfile, listTeamProfiles } from "@/lib/db/profiles";
 import { ownerDisplayName } from "@/lib/list-display";
 import { listTasksForCompany } from "@/lib/db/tasks";
@@ -49,6 +54,8 @@ export default async function CompanyDetailPage({
     deals,
     activities,
     tasks,
+    events,
+    eventAssociations,
     valueProps,
     currentProfile,
     teamProfiles,
@@ -59,6 +66,8 @@ export default async function CompanyDetailPage({
     listDealsForCompany(companyId),
     listActivitiesForCompany(companyId),
     listTasksForCompany(companyId),
+    listEvents(),
+    listEventAssociationsForCompany(companyId),
     listActiveValueProps(),
     getCurrentProfile(),
     listTeamProfiles(),
@@ -148,6 +157,14 @@ export default async function CompanyDetailPage({
         valueProps={valueProps}
         currentProfileId={currentProfile.id}
         teamProfiles={teamProfiles}
+        eventAssociations={eventAssociations}
+        events={events}
+      />
+      <CompanyEvents
+        associations={eventAssociations}
+        companyId={company.id}
+        contacts={contacts}
+        events={events}
       />
       <CompanyDeals
         companyId={company.id}

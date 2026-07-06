@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ActivityDeleteButton } from "@/components/crm/activity-delete-button";
 import { ActivityEditModalButton } from "@/components/crm/activity-edit-modal-button";
+import { CompanyEventAssociationButton } from "@/components/crm/event-association-buttons";
 import {
   ContactQuickActions,
   type PendingActivity,
@@ -30,9 +31,14 @@ import {
 } from "@/lib/activities/constants";
 import type { ActivityWithContext } from "@/lib/db/activities";
 import type { Contact } from "@/lib/db/contacts";
+import type {
+  EventAssociationWithContext,
+  EventWithDates,
+} from "@/lib/db/events";
 import type { TeamProfile } from "@/lib/db/profiles";
 import type { TaskWithContext } from "@/lib/db/tasks";
 import type { ValueProp } from "@/lib/db/value-props";
+import { formatEventDate } from "@/lib/events/format";
 import { ownerDisplayName } from "@/lib/list-display";
 import { isTaskOverdue } from "@/lib/tasks/constants";
 
@@ -42,6 +48,8 @@ type CompanyContactsProps = {
   contacts: Contact[];
   activities: ActivityWithContext[];
   currentProfileId: string;
+  eventAssociations?: EventAssociationWithContext[];
+  events?: EventWithDates[];
   tasks: TaskWithContext[];
   teamProfiles: TeamProfile[];
   valueProps: ValueProp[];
@@ -53,11 +61,14 @@ export function CompanyContacts({
   contacts,
   activities,
   currentProfileId,
+  eventAssociations = [],
+  events = [],
   tasks,
   teamProfiles,
   valueProps,
 }: CompanyContactsProps) {
   const activitiesByContact = new Map<string, ActivityWithContext[]>();
+  const eventAssociationsByContact = new Map<string, EventAssociationWithContext[]>();
   const tasksByContact = new Map<string, TaskWithContext[]>();
 
   for (const activity of activities) {
@@ -79,6 +90,20 @@ export function CompanyContacts({
     const contactTasks = tasksByContact.get(task.contact_id) ?? [];
     contactTasks.push(task);
     tasksByContact.set(task.contact_id, contactTasks);
+  }
+
+  for (const association of eventAssociations) {
+    if (!association.contact_id) {
+      continue;
+    }
+
+    const contactEventAssociations =
+      eventAssociationsByContact.get(association.contact_id) ?? [];
+    contactEventAssociations.push(association);
+    eventAssociationsByContact.set(
+      association.contact_id,
+      contactEventAssociations,
+    );
   }
 
   return (
@@ -125,6 +150,10 @@ export function CompanyContacts({
                 companyName={companyName}
                 activities={activitiesByContact.get(contact.id) ?? []}
                 currentProfileId={currentProfileId}
+                eventAssociations={
+                  eventAssociationsByContact.get(contact.id) ?? []
+                }
+                events={events}
                 tasks={tasksByContact.get(contact.id) ?? []}
                 teamProfiles={teamProfiles}
                 valueProps={valueProps}
@@ -143,6 +172,8 @@ function ContactRow({
   companyName,
   activities,
   currentProfileId,
+  eventAssociations,
+  events,
   tasks,
   teamProfiles,
   valueProps,
@@ -152,6 +183,8 @@ function ContactRow({
   companyName?: string;
   activities: ActivityWithContext[];
   currentProfileId: string;
+  eventAssociations: EventAssociationWithContext[];
+  events: EventWithDates[];
   tasks: TaskWithContext[];
   teamProfiles: TeamProfile[];
   valueProps: ValueProp[];
@@ -198,6 +231,7 @@ function ContactRow({
                   {contactName}
                 </span>
                 <ContactTaskIndicator tasks={tasks} />
+                <ContactEventBadge eventAssociations={eventAssociations} />
                 <ContactStatusBadge status={contact.status} compact />
                 <ContactNoteBadge notes={contact.notes} />
               </div>
@@ -243,6 +277,12 @@ function ContactRow({
 
       <div className="border-t border-neutral-200 px-4 py-4">
         <ContactNotesTopline notes={contact.notes} />
+        <ContactEventsTopline
+          companyId={companyId}
+          contact={contact}
+          eventAssociations={eventAssociations}
+          events={events}
+        />
 
         <div className="flex flex-col gap-3 lg:ml-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -351,6 +391,76 @@ function ContactNoteBadge({ notes }: { notes: string | null }) {
     <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 ring-1 ring-neutral-200">
       Notiz
     </span>
+  );
+}
+
+function ContactEventBadge({
+  eventAssociations,
+}: {
+  eventAssociations: EventAssociationWithContext[];
+}) {
+  if (eventAssociations.length === 0) {
+    return null;
+  }
+
+  return (
+    <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 ring-1 ring-neutral-200">
+      Event {eventAssociations.length}
+    </span>
+  );
+}
+
+function ContactEventsTopline({
+  companyId,
+  contact,
+  eventAssociations,
+  events,
+}: {
+  companyId: string;
+  contact: Contact;
+  eventAssociations: EventAssociationWithContext[];
+  events: EventWithDates[];
+}) {
+  return (
+    <div className="mb-4 rounded-md border border-neutral-200 bg-neutral-50 px-4 py-3 lg:ml-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-sm font-medium text-neutral-950">Events</p>
+          {eventAssociations.length === 0 ? (
+            <p className="mt-1 text-sm text-neutral-500">
+              Noch keinem Event zugeordnet.
+            </p>
+          ) : (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {eventAssociations.map((association) => (
+                <Link
+                  href={
+                    association.event
+                      ? `/events/${association.event.id}`
+                      : "/events"
+                  }
+                  className="rounded bg-white px-2 py-1 text-xs font-medium text-neutral-700 ring-1 ring-neutral-200 hover:text-neutral-950 hover:underline"
+                  key={association.id}
+                >
+                  {association.event?.name ?? "Event"}
+                  {association.event_date
+                    ? ` · ${formatEventDate(association.event_date.event_date)}`
+                    : ""}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+        <CompanyEventAssociationButton
+          companyId={companyId}
+          contactId={contact.id}
+          contacts={[contact]}
+          events={events}
+          label="Event"
+          returnTo={`/companies/${companyId}`}
+        />
+      </div>
+    </div>
   );
 }
 

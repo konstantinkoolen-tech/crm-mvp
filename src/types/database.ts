@@ -61,3 +61,9 @@ export type PainStatement =
   | "no_statement"
   | "pain_not_identified"
   | "pain_identified";
+
+export type EventDateFormRow = {
+  id?: string;
+  event_date: string;
+  internal_owner_id: string | null;
+};

@@ -1,5 +1,6 @@
 import {
   Building2,
+  CalendarDays,
   ClipboardList,
   Handshake,
   LayoutDashboard,
@@ -40,6 +41,11 @@ const navigation = [
     href: "/tasks",
     label: "Tasks",
     icon: ClipboardList,
+  },
+  {
+    href: "/events",
+    label: "Events",
+    icon: CalendarDays,
   },
 ];
 

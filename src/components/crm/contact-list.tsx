@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { ContactWithCompany } from "@/lib/db/contacts";
+import { formatEventDate } from "@/lib/events/format";
 import { ownerDisplayName } from "@/lib/list-display";
 
 type ContactSort = "updated_desc" | "name_asc" | "company_asc" | "created_desc";
@@ -125,6 +126,7 @@ export function ContactList({ contacts }: { contacts: ContactWithCompany[] }) {
               <TableHead>Name</TableHead>
               <TableHead>Unternehmen</TableHead>
               <TableHead>Position</TableHead>
+              <TableHead>Events</TableHead>
               <TableHead>Zuständig</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Aktionen</TableHead>
@@ -154,6 +156,9 @@ export function ContactList({ contacts }: { contacts: ContactWithCompany[] }) {
                   )}
                 </TableCell>
                 <TableCell>{contact.job_title ?? "-"}</TableCell>
+                <TableCell>
+                  <ContactEventSummary contact={contact} />
+                </TableCell>
                 <TableCell>{ownerDisplayName(contact.owner)}</TableCell>
                 <TableCell>
                   <ContactStatusBadge status={contact.status} />
@@ -181,6 +186,34 @@ export function ContactList({ contacts }: { contacts: ContactWithCompany[] }) {
 
 function contactName(contact: Pick<ContactWithCompany, "first_name" | "last_name">) {
   return `${contact.first_name} ${contact.last_name}`.trim();
+}
+
+function ContactEventSummary({ contact }: { contact: ContactWithCompany }) {
+  if (!contact.event_associations?.length) {
+    return <span className="text-neutral-500">-</span>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {contact.event_associations.slice(0, 2).map((association) => (
+        <Link
+          href={`/events/${association.event_id}`}
+          className="rounded bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-700 ring-1 ring-neutral-200 hover:text-neutral-950 hover:underline"
+          key={association.id}
+        >
+          {association.event?.name ?? "Event"}
+          {association.event_date
+            ? ` · ${formatEventDate(association.event_date.event_date)}`
+            : ""}
+        </Link>
+      ))}
+      {contact.event_associations.length > 2 ? (
+        <span className="rounded bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-500 ring-1 ring-neutral-200">
+          +{contact.event_associations.length - 2}
+        </span>
+      ) : null}
+    </div>
+  );
 }
 
 function dateValue(value: string) {
