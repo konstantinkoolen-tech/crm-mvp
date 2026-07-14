@@ -396,6 +396,36 @@ export async function createEventAssociation(formData: FormData) {
   redirect(returnTo);
 }
 
+export async function updateEventAssociation(formData: FormData) {
+  const associationId = requiredText(formData.get("association_id"));
+  const returnTo = requiredText(formData.get("return_to")) || "/events";
+  const fields = associationFields(formData);
+
+  if (!associationId) {
+    redirect(`${returnTo}?error=missing_event_association`);
+  }
+
+  if (!fields.event_id || !fields.company_id) {
+    redirect(`${returnTo}?error=missing_event_association`);
+  }
+
+  const { supabase, user } = await getCompanyClient();
+  const { error } = await supabase
+    .from("event_associations")
+    .update({
+      ...fields,
+      last_edited_by: user.id,
+    })
+    .eq("id", associationId);
+
+  if (error) {
+    redirect(`${returnTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidateEventPaths(fields.event_id, fields.company_id);
+  redirect(returnTo);
+}
+
 export async function deleteEventAssociation(formData: FormData) {
   const associationId = requiredText(formData.get("association_id"));
   const eventId = requiredText(formData.get("event_id"));

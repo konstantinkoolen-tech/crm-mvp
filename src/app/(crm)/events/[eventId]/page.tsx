@@ -2,10 +2,12 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import {
   EventAssociationCreateModalButton,
+  EventAssociationEditModalButton,
   EventCompanyCreateModalButton,
   EventContactCreateModalButton,
 } from "@/components/crm/event-association-buttons";
 import { EventAssociationDeleteForm } from "@/components/crm/event-association-delete-form";
+import { EventAssociationEditedBy } from "@/components/crm/event-association-edited-by";
 import { EventDeleteForm } from "@/components/crm/event-delete-form";
 import { EventEditModalButton } from "@/components/crm/event-edit-modal-button";
 import { RichTextDisplay } from "@/components/crm/rich-text-display";
@@ -242,9 +244,18 @@ export default async function EventDetailPage({
                       ) : (
                         <span className="text-neutral-500">-</span>
                       )}
+                      <EventAssociationEditedBy association={association} />
                     </TableCell>
                     <TableCell>
-                      <div className="flex justify-end">
+                      <div className="flex justify-end gap-1">
+                        <EventAssociationEditModalButton
+                          association={association}
+                          companies={companies}
+                          contacts={contacts}
+                          events={[event]}
+                          fixedEventId={event.id}
+                          returnTo={`/events/${event.id}`}
+                        />
                         <EventAssociationDeleteForm
                           associationId={association.id}
                           companyId={association.company_id}

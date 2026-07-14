@@ -1,6 +1,10 @@
 import Link from "next/link";
-import { CompanyEventAssociationButton } from "@/components/crm/event-association-buttons";
+import {
+  CompanyEventAssociationButton,
+  EventAssociationEditModalButton,
+} from "@/components/crm/event-association-buttons";
 import { EventAssociationDeleteForm } from "@/components/crm/event-association-delete-form";
+import { EventAssociationEditedBy } from "@/components/crm/event-association-edited-by";
 import { RichTextDisplay } from "@/components/crm/rich-text-display";
 import {
   Card,
@@ -112,9 +116,17 @@ export function CompanyEvents({
                     ) : (
                       <span className="text-neutral-500">-</span>
                     )}
+                    <EventAssociationEditedBy association={association} />
                   </TableCell>
                   <TableCell>
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-1">
+                      <EventAssociationEditModalButton
+                        association={association}
+                        contacts={contacts}
+                        events={events}
+                        fixedCompanyId={companyId}
+                        returnTo={`/companies/${companyId}`}
+                      />
                       <EventAssociationDeleteForm
                         associationId={association.id}
                         companyId={companyId}

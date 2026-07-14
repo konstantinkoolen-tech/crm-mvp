@@ -39,6 +39,7 @@ export type EventAssociationWithContext = {
   event_date_id: string | null;
   company_id: string;
   contact_id: string | null;
+  last_edited_by: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -59,6 +60,7 @@ export type EventAssociationWithContext = {
     email: string | null;
     job_title: string | null;
   } | null;
+  last_editor: ListOwner | null;
 };
 
 export type EventWithDetails = EventWithDates & {
@@ -69,7 +71,7 @@ const ownerSelect = "id, email, full_name, display_name";
 const eventBaseSelect =
   "id, owner_id, name, website, location, participant_count, focus, internal_notes, price, access, created_at, updated_at";
 const eventDateSelect = `id, event_id, event_date, internal_owner_id, created_at, updated_at, internal_owner:profiles!event_dates_internal_owner_id_fkey(${ownerSelect})`;
-const eventAssociationSelect = `id, event_id, event_date_id, company_id, contact_id, notes, created_at, updated_at, event:events(id, name, focus), event_date:event_dates(id, event_id, event_date, internal_owner_id, created_at, updated_at, internal_owner:profiles!event_dates_internal_owner_id_fkey(${ownerSelect})), company:companies(id, name), contact:contacts(id, first_name, last_name, email, job_title)`;
+const eventAssociationSelect = `id, event_id, event_date_id, company_id, contact_id, last_edited_by, notes, created_at, updated_at, event:events(id, name, focus), event_date:event_dates(id, event_id, event_date, internal_owner_id, created_at, updated_at, internal_owner:profiles!event_dates_internal_owner_id_fkey(${ownerSelect})), company:companies(id, name), contact:contacts(id, first_name, last_name, email, job_title), last_editor:profiles!event_associations_last_edited_by_fkey(${ownerSelect})`;
 
 export async function listEvents() {
   const { supabase } = await getCompanyClient();

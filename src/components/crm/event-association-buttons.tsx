@@ -1,11 +1,12 @@
 "use client";
 
-import { Building2, Link2, Plus, UserPlus } from "lucide-react";
+import { Building2, Link2, Pencil, Plus, UserPlus } from "lucide-react";
 import { useState } from "react";
 import {
   createCompanyForEvent,
   createContactForEvent,
   createEventAssociation,
+  updateEventAssociation,
 } from "@/app/(crm)/events/actions";
 import { RichTextTextarea } from "@/components/crm/rich-text-textarea";
 import { ModalShell } from "@/components/crm/modal-shell";
@@ -14,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { CompanyWithOwner } from "@/lib/db/companies";
 import type { Contact, ContactWithCompany } from "@/lib/db/contacts";
-import type { EventWithDates } from "@/lib/db/events";
+import type { EventAssociationWithContext, EventWithDates } from "@/lib/db/events";
 import type { TeamProfile } from "@/lib/db/profiles";
 import { formatEventDate } from "@/lib/events/format";
 import { ownerDisplayName } from "@/lib/list-display";
@@ -33,6 +34,23 @@ type EventAssociationCreateModalButtonProps = {
   companies: CompanyWithOwner[];
   contacts: ContactWithCompany[];
   event: EventWithDates;
+};
+
+type EventAssociationContactOption = Pick<
+  Contact,
+  "id" | "first_name" | "last_name" | "company_id"
+> & {
+  company?: { id: string; name: string } | null;
+};
+
+type EventAssociationEditModalButtonProps = {
+  association: EventAssociationWithContext;
+  companies?: Pick<CompanyWithOwner, "id" | "name">[];
+  contacts: EventAssociationContactOption[];
+  events: EventWithDates[];
+  fixedCompanyId?: string;
+  fixedEventId?: string;
+  returnTo: string;
 };
 
 type CompanyEventAssociationButtonProps = {
@@ -339,6 +357,164 @@ export function EventAssociationCreateModalButton({
   );
 }
 
+export function EventAssociationEditModalButton({
+  association,
+  companies = [],
+  contacts,
+  events,
+  fixedCompanyId,
+  fixedEventId,
+  returnTo,
+}: EventAssociationEditModalButtonProps) {
+  const [open, setOpen] = useState(false);
+  const [eventId, setEventId] = useState(fixedEventId ?? association.event_id);
+  const [companyId, setCompanyId] = useState(
+    fixedCompanyId ?? association.company_id,
+  );
+  const [contactId, setContactId] = useState(association.contact_id ?? "");
+  const selectedEvent = events.find((event) => event.id === eventId);
+  const selectedContact = contacts.find((contact) => contact.id === contactId);
+  const resolvedCompanyId =
+    fixedCompanyId ?? selectedContact?.company_id ?? companyId;
+  const availableContacts = fixedCompanyId
+    ? contacts.filter((contact) => contact.company_id === fixedCompanyId)
+    : companyId
+      ? contacts.filter((contact) => contact.company_id === companyId)
+      : contacts;
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        aria-label="Event-Zuordnung bearbeiten"
+        onClick={() => setOpen(true)}
+      >
+        <Pencil aria-hidden="true" />
+      </Button>
+      {open ? (
+        <ModalShell
+          eyebrow="Event-Zuordnung"
+          title="Zuordnung bearbeiten"
+          onClose={() => setOpen(false)}
+        >
+          <form action={updateEventAssociation} className="space-y-5">
+            <input
+              type="hidden"
+              name="association_id"
+              value={association.id}
+            />
+            <input type="hidden" name="company_id" value={resolvedCompanyId} />
+            <input type="hidden" name="return_to" value={returnTo} />
+            {fixedEventId ? (
+              <input type="hidden" name="event_id" value={fixedEventId} />
+            ) : null}
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {fixedEventId ? null : (
+                <label className="space-y-2">
+                  <span className="text-sm font-medium text-neutral-700">
+                    Event
+                  </span>
+                  <select
+                    name="event_id"
+                    value={eventId}
+                    onChange={(event) => setEventId(event.target.value)}
+                    required
+                    className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
+                  >
+                    {events.map((event) => (
+                      <option value={event.id} key={event.id}>
+                        {event.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
+              <EventDateSelect
+                dates={selectedEvent?.dates ?? []}
+                defaultValue={association.event_date_id ?? ""}
+              />
+
+              {fixedCompanyId ? null : (
+                <label className="space-y-2">
+                  <span className="text-sm font-medium text-neutral-700">
+                    Unternehmen
+                  </span>
+                  <select
+                    value={companyId}
+                    onChange={(event) => {
+                      setCompanyId(event.target.value);
+                      setContactId("");
+                    }}
+                    disabled={Boolean(contactId)}
+                    className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition disabled:bg-neutral-100 disabled:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
+                  >
+                    <option value="">Auswählen</option>
+                    {companies.map((company) => (
+                      <option value={company.id} key={company.id}>
+                        {company.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
+              <label className="space-y-2">
+                <span className="text-sm font-medium text-neutral-700">
+                  Kontakt optional
+                </span>
+                <select
+                  name="contact_id"
+                  value={contactId}
+                  onChange={(event) => {
+                    const nextContactId = event.target.value;
+                    const nextContact = contacts.find(
+                      (contact) => contact.id === nextContactId,
+                    );
+
+                    setContactId(nextContactId);
+                    setCompanyId(
+                      nextContact?.company_id ??
+                        fixedCompanyId ??
+                        association.company_id,
+                    );
+                  }}
+                  className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
+                >
+                  <option value="">Kein Kontakt</option>
+                  {availableContacts.map((contact) => (
+                    <option value={contact.id} key={contact.id}>
+                      {contact.first_name} {contact.last_name}
+                      {contact.company ? ` · ${contact.company.name}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor={`event-association-notes-${association.id}`}>
+                  Notiz
+                </Label>
+                <RichTextTextarea
+                  id={`event-association-notes-${association.id}`}
+                  name="association_notes"
+                  defaultValue={association.notes ?? ""}
+                  placeholder="Event-Kontext zu dieser Zuordnung"
+                />
+              </div>
+            </div>
+
+            <FormActions onCancel={() => setOpen(false)} submitLabel="Speichern" />
+          </form>
+        </ModalShell>
+      ) : null}
+    </>
+  );
+}
+
 export function CompanyEventAssociationButton({
   companyId,
   contactId,
@@ -431,12 +607,19 @@ export function CompanyEventAssociationButton({
   );
 }
 
-function EventDateSelect({ dates }: { dates: EventWithDates["dates"] }) {
+function EventDateSelect({
+  dates,
+  defaultValue = "",
+}: {
+  dates: EventWithDates["dates"];
+  defaultValue?: string;
+}) {
   return (
     <label className="space-y-2">
       <span className="text-sm font-medium text-neutral-700">Datum</span>
       <select
         name="event_date_id"
+        defaultValue={defaultValue}
         className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/20"
       >
         <option value="">Ohne konkretes Datum</option>

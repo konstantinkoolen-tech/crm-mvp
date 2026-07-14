@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#1f1f1f" />
+  <rect x="45" y="142" width="422" height="17" rx="8.5" fill="#d65ab1" />
+  <text
+    x="256"
+    y="325"
+    fill="#d65ab1"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="149"
+    font-weight="800"
+    letter-spacing="-3"
+    text-anchor="middle"
+  >
+    CRM
+  </text>
+  <rect x="45" y="359" width="422" height="17" rx="8.5" fill="#d65ab1" />
+</svg>
