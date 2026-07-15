@@ -1,16 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect x="8" y="78" width="496" height="22" rx="11" fill="#d65ab1" />
   <text
     x="256"
-    y="328"
+    y="338"
     fill="#d65ab1"
     font-family="Arial, Helvetica, sans-serif"
-    font-size="198"
+    font-size="224"
     font-weight="900"
-    letter-spacing="-8"
+    letter-spacing="-12"
     text-anchor="middle"
   >
     CRM
   </text>
-  <rect x="8" y="374" width="496" height="22" rx="11" fill="#d65ab1" />
 </svg>
